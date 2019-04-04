@@ -1,0 +1,53 @@
+2019 04 01
+
+Init
+
+<div class="body-part main-body"> contains all the page modules.  This is the element that is
+most likely to change; plus it contains all the primary content so it is important to analysis this
+element thoroughly.
+Verify that the class value is the same for every page.  If there is a discrepency
+in the class value, it should be logged.
+
+Look for:
+id="body-content" role="main"
+in order to reach the main content.
+
+XPATH to a YMABI module carousel element
+//*[@id="cc54bc26f25f6d1d"]/div[2]/div[1]/div[2]/div/div/div/div/div/div[1]/div/div/a
+
+Protocol
+1. Visit store.google.com
+2. Get all the links on the page
+3. Create a UUID for each string
+4. Store the links and their UUID together in a file
+5. Store the html page with the UUID as the name
+
+2019-4-2
+Hey, a log! I'm adding this on 2019-4-3.
+Ended the day by storing urls in a hashtable, by url. Things got ugly.
+
+2019-4-3
+Lots of developing very little logging, more ideas.
+Hashtable keys are now of class UUID generated using a url string to avoid long file names and simplicity.
+Page source is stored in a file named with only the UUID.
+
+Create a key map file for combining UUID and HTML page details.
+
+
+2019-4-4
+Thinking about creating a graph data structure, but decided to postpone.
+TODO: Data needs to be stored on disk to perform offline website analysis and to accelerate crawling.
+TODO: Create directory tree for ease of recovery.
+TODO: GUI
+TODO: Ability to pause and continue web crawling.
+TODO: Save crawling status to disk in order to continue during another session.
+TODO: Work on graph design and invoke limitations (No WebPage without graph)
+
+
+Directory Structure:
+WebSiteGraph
+    GraphDetails (a file)
+    Pages
+        Page (dir name uses UUID)
+            Source (UUID.html)
+            Details

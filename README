@@ -1,0 +1,5 @@
+This project will very likely not build because the files tree on computers differ.
+The uri in WebsiteGraph needs to be changed to one where all the page sources will be stored.
+
+Similar projects
+http://webgraph.di.unimi.it/
