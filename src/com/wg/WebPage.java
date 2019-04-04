@@ -1,5 +1,4 @@
-package com.fqa;
-import java.net.*;
+package com.wg;
 import java.util.*;
 
 /*
@@ -14,6 +13,7 @@ public class WebPage {
     String pageSource;
     java.util.Date lastUpdated;
     Boolean visited;
+    static String pagesDir =  "/Users/kevin/Documents/googleStore/WebSiteGraph/Pages/";
 
     WebPage() {
 

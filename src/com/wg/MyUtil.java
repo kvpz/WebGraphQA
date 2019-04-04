@@ -1,5 +1,4 @@
-package com.fqa;
-import javax.naming.spi.DirectoryManager;
+package com.wg;
 import java.io.File;
 import java.util.*;
 
@@ -16,11 +15,10 @@ public class MyUtil {
 
     }
 
-    public static void CreateDirectory(String dirname) {
+    public static File CreateDirectory(String dirname) {
         File f = new File(dirname);
         f.mkdir();
-        if (f.isDirectory())
-            System.out.println("It's a directory");
+        return f;
     }
 
     public static void log(String s) {

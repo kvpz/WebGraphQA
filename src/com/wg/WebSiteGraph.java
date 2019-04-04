@@ -1,4 +1,4 @@
-package com.fqa;
+package com.wg;
 
 /*
     The class should be dedicated to a single domain.

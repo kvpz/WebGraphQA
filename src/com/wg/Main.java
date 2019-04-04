@@ -1,4 +1,4 @@
-package com.fqa;
+package com.wg;
 import org.openqa.selenium.*;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -104,15 +104,10 @@ public class Main {
         This will create and add a page to the hashtable. The page object will only have
         the url member data initialized.
      */
-    public static void AddPage(Hashtable<UUID, WebPage> pages, String url) {
-        WebPage page = new WebPage(url);
-        if(!pages.containsKey(MyUtil.urlToUUID(url))) {
-            pages.put(MyUtil.urlToUUID(url), page);
-        }
-    }
-
     public static void AddPage(Hashtable<UUID, WebPage> pages, WebPage page) {
-        AddPage(pages, page);
+        if(!pages.containsKey(MyUtil.urlToUUID(page.url))) {
+            pages.put(MyUtil.urlToUUID(page.url), page);
+        }
     }
 
     /*
@@ -125,8 +120,8 @@ public class Main {
                 if (hrefUrl == null) {
                     continue;
                 }
-                if(hrefUrl.contains("smart_light_bundles")) { System.out.println("SMART_LIGHT_BUNDLES!"); }
-                AddPage(ds, hrefUrl);
+                WebPage page = new WebPage(hrefUrl);
+                AddPage(ds, page);
             }
             catch(StaleElementReferenceException e) {
                 System.out.println(e);
@@ -147,25 +142,30 @@ public class Main {
     }
 
     /*
-        Visit pages stored in memory
+        Visit pages stored on disk
      */
     public static void VisitPage(FirefoxDriver fd, Hashtable<UUID, WebPage> pages, WebPage page, String loc) {
-        System.out.println("VisitPage - cached");
 
         VisitPage(fd, pages, page);  // temporary
     }
 
-    public static void WriteHTMLToFile(String path, String filename, Hashtable<UUID, WebPage> pages) {
+    /*
+        Write the page source to a file on disk.
+        The file is stored in the Pages directory.
+     */
+    public static void WriteHTMLToFile(String fileName, Hashtable<UUID, WebPage> pages) {
+        String path = WebPage.pagesDir;
+        File pageDir = MyUtil.CreateDirectory(path + fileName);
         try {
-            File outFile = new File(path + filename);
+            File outFile = new File(pageDir + "/" + fileName);
             if (!outFile.exists()) // do not overwrite existing files
             {
                 FileWriter fw = new FileWriter(outFile);
-                fw.write(pages.get(UUID.fromString(filename)).GetPageSource());
+                fw.write(pages.get(UUID.fromString(fileName)).pageSource);
                 fw.close();
             }
         } catch (Exception e) {
-            System.out.println("Custom error message (in main)" + e);
+            System.out.println("Custom error message (WriteHTMLToFile())\n" + e);
         }
     }
 
@@ -181,9 +181,12 @@ public class Main {
         return new FirefoxDriver(firefoxOptions);
     }
 
+    static File CreatePageDir(String path, String dirName) {
+        return MyUtil.CreateDirectory(path + dirName);
+    }
+
     public static void main(String[] args) {
         Boolean caching = true;
-        String HTMLPagesDir = "/Users/kevin/Documents/googleStore/googleStorePages/";
 
         WebSiteGraph webGraph = new WebSiteGraph("store.google.com");
 
@@ -205,12 +208,15 @@ public class Main {
                 // Visit pages under store.google.com
                 if (currentPage.url.contains("store.google.com") && currentPage.visited == false) {
                     MyUtil.log("Visiting " + currentPage.url);
-                    if (caching && checkIfFileExists(Paths.get(webGraph.graphDir + "/" + currentUUID)))
-                        VisitPage(fd, pages, currentPage, "file://" + HTMLPagesDir + "/" + currentUUID);
+                    if (caching && checkIfFileExists(Paths.get(webGraph.graphDir + currentUUID)))
+                        VisitPage(fd, pages, currentPage, "file://" + webGraph.graphDir + "/" + currentUUID);
                     else
                         VisitPage(fd, pages, currentPage);
 
-                    WriteHTMLToFile(HTMLPagesDir, currentUUID.toString(), pages);
+                    // Establish a directory dedicated to the webpage
+                    File pageDirectory = CreatePageDir(WebPage.pagesDir, currentUUID.toString());
+                    MyUtil.log("creating file " + pageDirectory.getPath());
+                    WriteHTMLToFile(currentUUID.toString(), pages);
                 }
             }
 

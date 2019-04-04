@@ -1,4 +1,4 @@
-package com.fqa;
+package com.wg;
 
 /*
     Represents an analysis of an HTML file.

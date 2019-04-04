@@ -1,4 +1,4 @@
-package com.fqa;
+package com.wg;
 
 public class TestDriver {
     public static void main(String[] s) {
