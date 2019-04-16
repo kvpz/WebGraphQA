@@ -36,12 +36,19 @@ Create a key map file for combining UUID and HTML page details.
 
 2019-4-4
 Thinking about creating a graph data structure, but decided to postpone.
-TODO: Data needs to be stored on disk to perform offline website analysis and to accelerate crawling.
-TODO: Create directory tree for ease of recovery.
+TODO: Data needs to be stored on disk to perform offline website analysis and to accelerate crawling, and diff/ version analysis (identify if page has been updated).
 TODO: GUI
 TODO: Ability to pause and continue web crawling.
 TODO: Save crawling status to disk in order to continue during another session.
 TODO: Work on graph design and invoke limitations (No WebPage without graph)
+TODO: (project specific) identify module types (ex, is it a carousel, video, )
+TODO: Build a TraversalFactory. This class would contain different types of traversals with embedded functionality in order to achieve a fruitful travel.
+TODO: Collect the total amount of images and the size of each image for each page.
+TODO: Keep track of module ids in order to find possible duplicates of a module across the site which would be good for retesting.
+TEST: Verify the Buy buttons link to the correct config page (check if products match)
+<h1 class="title-text header-text-3" itemprop="name">product_name</h1>
+TODO: Create toggles: overwrite, overwrite if
+TODO: Something that can run concurrent to the webdriver loading a page.
 
 
 Directory Structure:
@@ -51,3 +58,29 @@ WebSiteGraph
         Page (dir name uses UUID)
             Source (UUID.html)
             Details
+
+Create a program that will tell a screen-recorder when to stop playing when a certain event thrown by the browser via Selenium arrives.
+
+2019-4-6
+
+Project is now built on JDK 8 instead of JDK 11 for portability reasons and JNI support.
+https://www.chilkatsoft.com/java-loadLibrary-Linux.asp
+https://www.ibm.com/developerworks/java/tutorials/j-jni/j-jni.html
+https://docs.oracle.com/javase/10/docs/specs/jni/index.html
+
+
+
+Web crawler feature
+Create a function to capture the size of the DOM after scrolling through the page. This is for performance testing.
+
+
+Detect console errors
+
+Does https://store.google.com/collection/offers have a content element??
+
+
+2019-4-16
+Exception in thread "main" org.openqa.selenium.StaleElementReferenceException: The element reference of <a class="mqn2-abd" href="/product/smart_light_bundles"> is stale; either the element is no longer attached to the DOM, it is not in the current frame context, or the document has been refreshed
+This exception says a lot about how inefficient the webdriver is at analyzing static html.  All I want to do is extract the value for the href attribute, which does not need javascript in order for it to appear in the viewport.
+When there is time, the evaluation of static html files can be optimized by using a binding to the C library MyHTML (https://github.com/lexborisov/myhtml)
+
