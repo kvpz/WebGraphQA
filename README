@@ -1,5 +1,6 @@
-This project will very likely not build because the files tree on computers differ.
-The uri in WebsiteGraph needs to be changed to one where all the page sources will be stored.
+I need some help with logging and writing tests.
+
+Tests should be implemented under src/main/java/com.wg/GoogleStoreTests.java
 
 Similar projects
 http://webgraph.di.unimi.it/
