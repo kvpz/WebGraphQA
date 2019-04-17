@@ -174,30 +174,7 @@ public class GoogleStoreCrawler {
         List<WebElement> pageModules = fd.findElements(By.className("page-module"));
         page.AddModules(pageModules);
 
-
         page.SetVisited();
-    }
-
-    /**
-        Write the page source to a file on disk.
-        The file is stored in the Pages directory.
-
-        Moving to class WebGraphFile (possibly renaming to WritePageSource)
-     */
-    public static void WriteHTMLToFile(String fileName, Hashtable<UUID, WebPage> pages) {
-        String path = webGraphPath;
-        File pageDir = MyUtil.CreateDirectory(path + fileName);
-        try {
-            File outFile = new File(pageDir + "/" + fileName);
-            if (!outFile.exists()) // do not overwrite existing files
-            {
-                FileWriter fw = new FileWriter(outFile);
-                fw.write(pages.get(UUID.fromString(fileName)).GetPageSource());
-                fw.close();
-            }
-        } catch (Exception e) {
-            System.out.println("Custom error message (WriteHTMLToFile())\n" + e);
-        }
     }
 
     /**
