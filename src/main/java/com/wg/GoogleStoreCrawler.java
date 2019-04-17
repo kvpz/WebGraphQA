@@ -56,7 +56,6 @@ public class GoogleStoreCrawler {
     static Date DATE = new Date(); // the time this program is executed
     static FileWriter runtimeLogFile = null; // file writer for runtime logging
     static Graph<WebPage, WebPageEdge> webGraph; // the main graph structure
-    static String webGraphPath = "WebGraph" + File.separator; // the location where scraped data is stored (moving to class WebGraphFile)
     static boolean overwrite = false; // moving to class WebGraphFile
     static FirefoxDriver fd = CreateFFDriver();
 
