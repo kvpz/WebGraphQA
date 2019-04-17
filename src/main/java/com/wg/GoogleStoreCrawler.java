@@ -194,17 +194,6 @@ public class GoogleStoreCrawler {
     }
 
     /**
-        Creates a directory for a webpage.
-
-        Moving to class WebGraphFile
-     */
-    static File CreatePageDir(String path, String dirName) {
-        return MyUtil.CreateDirectory(path + dirName);
-    }
-
-
-
-    /**
          Write to the runtime log file.
      */
     static void WriteToLog(String s){
