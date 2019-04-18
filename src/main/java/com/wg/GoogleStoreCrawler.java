@@ -77,6 +77,22 @@ public class GoogleStoreCrawler {
     }
 
     /**
+     Create a FirefoxDriver with options enabled.
+     */
+    static FirefoxDriver CreateFFDriver() {
+        FirefoxBinary firefoxBinary = new FirefoxBinary();
+        firefoxBinary.addCommandLineOptions("--headless");
+        firefoxBinary.addCommandLineOptions("--load-images=no");
+        FirefoxProfile firefoxProfile = new FirefoxProfile();
+        firefoxProfile.setPreference("permissions.default.image", 2);
+        FirefoxOptions firefoxOptions = new FirefoxOptions();
+        firefoxOptions.setBinary(firefoxBinary);
+        firefoxOptions.setProfile(firefoxProfile);
+
+        return new FirefoxDriver(firefoxOptions);
+    }
+
+    /**
         This function will collect all links on a page.
         Issue: if the webpage is stored locally, the relative links paths will be evaluated to local storage.
         To get the href value as seen in the html, do webElement.getAttribute("pathname") assumming the webElement
@@ -93,14 +109,17 @@ public class GoogleStoreCrawler {
 
         [3] <a class="mqn-abf mqn-abp" href="https://support.google.com/store/answer/6380752?hl=en-US" mqn-autotrack-label="https://support.google.com/store/answer/6380752" target="_blank"></a>
             webElement.getAttribute("pathname") will get the path for the absolute url assigned to href.
+
+     pathname: //Users/kevin/IdeaProjects/GoogleStoreQA/WebGraph/storegooglecomproductgoogle_pixelbook/source.html
+     href: file:////Users/kevin/IdeaProjects/GoogleStoreQA/WebGraph/storegooglecomproductgoogle_pixelbook/source.html#
      */
-    public static List<String> getLinks(FirefoxDriver driver) {
+    public static List<String> getLinks() {
         String[] tags = {"a"}; //, "area", "base", "link"};
         //String[] attributes = {"href", "data-config-url"};
         List<String> links = new ArrayList<String>();
 
         for(int _i = 0; _i < tags.length; ++_i) {
-            List<WebElement> linkElements = driver.findElementsByTagName(tags[_i]);
+            List<WebElement> linkElements = fd.findElementsByTagName(tags[_i]);
 
             for(WebElement webElement : linkElements) {
                 try {
@@ -109,13 +128,19 @@ public class GoogleStoreCrawler {
                     String refLink = webElement.getAttribute("href"); // get entire href value
                     System.out.println("pathname: " + refPath + "\n" + "href: " + refLink);
 
-                    if(refPath == null || refLink == null) continue;
-                    if(refPath.equals("#")) continue;
+                    if(refPath == null || refLink == null) continue;  // no value assigned to href
+                    if(refPath.equals("#") || refPath.equals("/") || refPath.contains("WebGraph")) continue; // do not add link for current page
+
                     if(refLink.contains("http") && !refLink.contains(WEBSITE)) { // href value is external link (assumed because it is an absolute path)
                         urlToAdd = refLink;
+                        System.out.println("urlToAdd: " + urlToAdd);
                     }
+                    //else if(refLink.contains("WebGraph")) {
+                        // remove local file path
+                    //}
                     else { // href value is relative to the website domain
                         urlToAdd = "https://" + WEBSITE + refPath;
+                        System.out.println("urlToAdd: " + urlToAdd);
                     }
 
                     links.add(urlToAdd);
@@ -141,7 +166,7 @@ public class GoogleStoreCrawler {
             return;
         }
 
-        for(String url : getLinks(fd)) {
+        for(String url : getLinks()) {
             if (url != null) {
                 System.out.println("Adding webpage " + url + " to graph");
                 WebPage relPage = new WebPage(url);
@@ -185,22 +210,6 @@ public class GoogleStoreCrawler {
         page.AddModules(pageModules);
 
         page.SetVisited();
-    }
-
-    /**
-        Create a FirefoxDriver with options enabled.
-     */
-    static FirefoxDriver CreateFFDriver() {
-        FirefoxBinary firefoxBinary = new FirefoxBinary();
-        firefoxBinary.addCommandLineOptions("--headless");
-        firefoxBinary.addCommandLineOptions("--load-images=no");
-        FirefoxProfile firefoxProfile = new FirefoxProfile();
-        firefoxProfile.setPreference("permissions.default.image", 2);
-        FirefoxOptions firefoxOptions = new FirefoxOptions();
-        firefoxOptions.setBinary(firefoxBinary);
-        firefoxOptions.setProfile(firefoxProfile);
-
-        return new FirefoxDriver(firefoxOptions);
     }
 
     /**
@@ -312,7 +321,7 @@ public class GoogleStoreCrawler {
                 fd.get("file:///" + webPage.GetPageSourcePath());
             }
 
-            System.out.println("Adding links to graph from " + webPage.GetUrl());
+            System.out.println("Adding links to graph from " + fd.getCurrentUrl());
             if(webPage.GetUrl().contains(WEBSITE)) {
                 linksFound.add(webPage.GetUrl());
                 StorePageLinksInGraph(webPage); // will not store links if page is not under store.google.com
