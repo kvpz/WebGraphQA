@@ -58,6 +58,7 @@ public class GoogleStoreCrawler {
     static Graph<WebPage, WebPageEdge> webGraph; // the main graph structure
     static boolean overwrite = false; // moving to class WebGraphFile
     static FirefoxDriver fd = CreateFFDriver();
+    static HashSet<String> linksFound;
 
     /**
         Set caching on if requesting the page with a web driver is not desired
@@ -68,6 +69,12 @@ public class GoogleStoreCrawler {
     static final String WEBSITE = "store.google.com";
 
 
+    /**
+     This will create and add a page to the graph.
+     */
+    public static void AddPageToGraph(Graph<WebPage, WebPageEdge> g, WebPage page) {
+        webGraph.addVertex(page);
+    }
 
     /**
         This function will collect all links on a page.
@@ -82,27 +89,36 @@ public class GoogleStoreCrawler {
 
         [2] <link href="/intl/ALL_us/about/images/store_icon.png" rel="shortcut icon">
             It seems like webElement.getAttribute("pathname") does not work the same way on non-anchor elements (at least link elements)
+            Link tags are now being avoided.
 
         [3] <a class="mqn-abf mqn-abp" href="https://support.google.com/store/answer/6380752?hl=en-US" mqn-autotrack-label="https://support.google.com/store/answer/6380752" target="_blank"></a>
-            It seems like webElement.getAttribute("pathname") will get the path for the absolute url assigned to href.
+            webElement.getAttribute("pathname") will get the path for the absolute url assigned to href.
      */
     public static List<String> getLinks(FirefoxDriver driver) {
-        String[] tags = {"a", "area", "base", "link"};
-        String[] attributes = {"href", "data-config-url"};
+        String[] tags = {"a"}; //, "area", "base", "link"};
+        //String[] attributes = {"href", "data-config-url"};
         List<String> links = new ArrayList<String>();
-        for(int _i = 0; _i < 4; ++_i) {
+
+        for(int _i = 0; _i < tags.length; ++_i) {
             List<WebElement> linkElements = driver.findElementsByTagName(tags[_i]);
 
             for(WebElement webElement : linkElements) {
                 try {
-                    String refLink = webElement.getAttribute("pathname"); // get the path of the href value
+                    String urlToAdd = null;
+                    String refPath = webElement.getAttribute("pathname"); // get the path of the href value
+                    String refLink = webElement.getAttribute("href"); // get entire href value
+                    System.out.println("pathname: " + refPath + "\n" + "href: " + refLink);
 
-                    if (refLink != null && !refLink.equals("#")) {
-                        if (!webElement.getAttribute("href").contains("storage.google.com")) // avoid appending the incorrect domain to a path
-                            links.add("https://" + WEBSITE + refLink);
-                    } else {
-                        links.add(webElement.getAttribute("href")); // store hard link value assigned to href
+                    if(refPath == null || refLink == null) continue;
+                    if(refPath.equals("#")) continue;
+                    if(refLink.contains("http") && !refLink.contains(WEBSITE)) { // href value is external link (assumed because it is an absolute path)
+                        urlToAdd = refLink;
                     }
+                    else { // href value is relative to the website domain
+                        urlToAdd = "https://" + WEBSITE + refPath;
+                    }
+
+                    links.add(urlToAdd);
                 }
                 catch(StaleElementReferenceException e){
                     System.out.println("Exception in getLinks" + e);
@@ -114,20 +130,14 @@ public class GoogleStoreCrawler {
     }
 
     /**
-        This will create and add a page to the graph.
-     */
-    public static void AddPageToGraph(Graph<WebPage, WebPageEdge> g, WebPage page) {
-        webGraph.addVertex(page);
-    }
-
-    /**
         Read URLs from the page source to create and add WebPage vertices into the graph.
-        This function prevents adding vertices that do no belong under the store.google.com domain.
+        This function prevents adding links from a web page that does not belong under the store.google.com domain. It
+        will however add webpage links that are found under a valid webpage.
      */
-    public static void StorePageLinksInGraph(FirefoxDriver fd, WebPage webPage) {
+    public static void StorePageLinksInGraph(WebPage webPage) {
         // Webpage must be under WEBSITE domain
         if(!webPage.GetUrl().contains(WEBSITE)) {
-            System.out.println("Webpage " + webPage.GetUrl() + " will not be stored in graph");
+            //System.out.println("Webpage " + webPage.GetUrl() + " will not be stored in graph");
             return;
         }
 
@@ -161,8 +171,9 @@ public class GoogleStoreCrawler {
         This function contains the code for parsing/ driving the webpage.
         This function contains a thread sleeper to provide time for a page module to load
         This function populates a webpage object.
+        This is called by function TraverseGraph
      */
-    public static void VisitPage(FirefoxDriver fd, Graph<WebPage, WebPageEdge> g, WebPage page) {
+    public static void VisitPage(WebPage page) {
         fd.get(page.GetUrl());
 
         // Extract links in the page
@@ -273,61 +284,89 @@ public class GoogleStoreCrawler {
     }
 
     /**
-        Only visit (request) pages with store.google.com domain. Other url domains are child vertices and should not be downloaded.
+        Only visit (request) pages with store.google.com domain and add them to the graph. This includes files that
+        are stored locally (which are under store.google.com). Other url domains are child vertices and are not downloaded.
      */
-    public static void TraverseGraph(GraphIterator webGraphItr) {
+    public static void TraverseGraph(GraphIterator webGraphItr) { //, int traversalLimiter) {
+        int startGraphSize = webGraph.vertexSet().size();
+        int traversalCounter = 0;
 
         do {
             WebPage webPage = (WebPage) webGraphItr.next();
-            System.out.println("Current traversal page: " + webPage.GetUrl());
 
-            AddPageToGraph(webGraph, webPage); // create a vertex
+            AddPageToGraph(webGraph, webPage); // add a new vertex regardless of webpage domain
 
+            // visit webpage that belongs to store.google.com that has not been visited by traversal
             if(!webPage.GetVisited() && GetUrlDomain(webPage.GetUrl()).contains(WEBSITE) &&
                 webPage.GetPageSourcePath() == null) {
 
                 System.out.println("Visiting page: " + webPage.GetUrl());
-                VisitPage(fd, webGraph, webPage);
+                VisitPage(webPage);
 
+                // store webpage locally
                 WebGraphFile pageOutFile = new WebGraphFile(webPage);
                 pageOutFile.WriteWebPageToFile(webPage);
-
             }
             else if(GetUrlDomain(webPage.GetUrl()).contains(WEBSITE) && webPage.GetPageSourcePath() != null) {
-                System.out.println("Getting page source: " + webPage.GetPageSourcePath());
+                // request webpage from local file
                 fd.get("file:///" + webPage.GetPageSourcePath());
             }
 
             System.out.println("Adding links to graph from " + webPage.GetUrl());
-            StorePageLinksInGraph(fd, webPage);
+            if(webPage.GetUrl().contains(WEBSITE)) {
+                linksFound.add(webPage.GetUrl());
+                StorePageLinksInGraph(webPage); // will not store links if page is not under store.google.com
+            }
 
-        } while(webGraphItr.hasNext());
-    }
-
-
-    public static void Traverse() {
-        GraphIterator webGraphItr = new BreadthFirstIterator<WebPage, WebPageEdge>(webGraph);
-
-        int graphSize;
-        do {
-            System.out.println("Outer loop (main) 1");
-            graphSize = webGraph.vertexSet().size();
-            TraverseGraph(webGraphItr);
-            System.out.println("Outer loop (main) 2");
-            webGraphItr = new BreadthFirstIterator<WebPage, WebPageEdge>(webGraph);
-            System.out.println("Outer loop (main) 3");
-        }while(graphSize != webGraph.vertexSet().size());
+            System.out.println("Ending traversal iteration. Graph size: " + startGraphSize + " counter: " + traversalCounter);
+        } while(++traversalCounter < startGraphSize); // && traversalCounter < traversalLimiter);
+        System.out.println("Leaving TraverseGraph()");
     }
 
     /**
-        Crawl the entire website.
+        Outer loop of graph traversal. This creates an iterator for the graph with new elements added.
+     */
+    public static void Traverse() {//int traversalLimiter)
+
+        GraphIterator webGraphItr = new BreadthFirstIterator<WebPage, WebPageEdge>(webGraph);
+
+        int graphSize;
+        int traversalCounter = 0;
+        do {
+            graphSize = webGraph.vertexSet().size();
+            TraverseGraph(webGraphItr); //, traversalLimiter);
+            webGraphItr = new BreadthFirstIterator<WebPage, WebPageEdge>(webGraph);
+        }while(graphSize != webGraph.vertexSet().size()); // && traversalCounter < traversalLimiter);
+    }
+
+    /**
+        Crawl the entire website. Tests can be added within Traverse (within any code reached by that function).
      */
     public static void main(String[] args) {
 
         InitializeSessionLog();
 
+        linksFound = new HashSet<String>();
+        FileReader inLinksFile = null;
+        FileWriter outLinksFile = null;
+        File linksFile = null;
+        try {
+            linksFile = new File("GStoreLinks.dat");
+            inLinksFile = new FileReader(linksFile);
+            // Store unique links in hashset
+            BufferedReader bufInLinksFile = new BufferedReader(inLinksFile);
+            bufInLinksFile.lines().forEach(l -> linksFound.add(l));
+            bufInLinksFile.close();
+
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+
+
+
         // Instantiate graph
-        WebPage startPage = new WebPage("https://store.google.com/ca/product/google_pixel_buds");
+        WebPage startPage = new WebPage("https://store.google.com/product/pixel_3");
         webGraph = new DefaultDirectedGraph(WebPageEdge.class);
         AddPageToGraph(webGraph, startPage); // creates and adds webpage vertex to graph
 
@@ -336,6 +375,19 @@ public class GoogleStoreCrawler {
 
         System.out.println("Total vertices: " + webGraph.vertexSet().size());
         System.out.println("Total runtime: " + ((new Date()).getTime() - DATE.getTime()) / 1000.0f + "s");
+
+        try {
+            outLinksFile = new FileWriter(linksFile);
+            BufferedWriter bufOutLinksFile = new BufferedWriter(outLinksFile);
+            for(String link : linksFound) {
+                bufOutLinksFile.write(link);
+                bufOutLinksFile.newLine();
+            }
+            bufOutLinksFile.close();
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }
 
         ExportGraph();
 
