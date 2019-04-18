@@ -39,13 +39,13 @@ public class WebGraphFile {
         webPageDirPath =  WEBGRAPHFILE_PATH + webPage.GetId() + File.separator;
         metaFilePath = webPageDirPath + "meta.dat";
         sourceFilePath = webPageDirPath + "source.html";
-
+        System.out.println("WebGraphFile constructor: webPageDirPath: " + webPageDirPath);
     }
 
     /**
         Returns the webpage dedicated directory file path if it exists, else returns null;
      */
-    public String GetWebPageFilePath(WebPage webPage) {
+    public String GetWebPageFilePath() {
         File file = new File(webPageDirPath);
         if(file.exists()) {
             System.out.println("File " + webPageDirPath + " exists");
@@ -55,7 +55,7 @@ public class WebGraphFile {
         return null;
     }
 
-    public String GetWebPageSourceFilePath(WebPage webPage) {
+    public String GetWebPageSourceFilePath() {
         File file = new File(sourceFilePath);
         if(file.exists()) {
             System.out.println("File " + sourceFilePath + " exists");
@@ -65,20 +65,16 @@ public class WebGraphFile {
         return null;
     }
 
-    /**
-
-     */
 
     /**
-     Persist graph data to a file. This function will overwrite a file if it exists by default.
+        Persist graph data to a file. This function will overwrite a file if it exists by default.
      */
      public void WriteWebPageToFile(WebPage webPage) {
-        String webPageDirFilePath = GetWebPageFilePath(webPage);
 
         try {
-            File pageFile = new File(webPageDirFilePath);
+            File pageFile = new File(webPageDirPath);
             pageFile.mkdir();
-
+            System.out.println("Directory " + webPageDirPath + " created.");
             FileWriter pageSourceOut = new FileWriter(sourceFilePath);
             FileWriter pageMetaOut = new FileWriter(metaFilePath);
 
@@ -93,6 +89,8 @@ public class WebGraphFile {
                 pageMetaOut.write(id + "\n");
             }
             pageMetaOut.close();
+            pageSourceOut.close();
+
         }
         catch(Exception e) {
             System.out.println("Exception in WriteWebPageToFile(WebPage)\n" + e);
