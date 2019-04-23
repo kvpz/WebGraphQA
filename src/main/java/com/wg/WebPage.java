@@ -1,14 +1,5 @@
 package com.wg;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.SetMultimap;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.Reader;
 import java.util.*;
 
 /*
@@ -19,7 +10,7 @@ import java.util.*;
  */
 public class WebPage {
 
-    public static Map<String, String> regions = new HashMap<String, String>() {
+    public static HashMap<String, String> regions = new HashMap<String, String>() {
         {
             put("br", "portuguese");
             put("ca", "english");
@@ -30,19 +21,46 @@ public class WebPage {
             put("hk", "chinese");
             put("hk", "english");
             put("in", "english");
-
+            put("id", "indonesian");
+            put("jp", "japanese");
+            put("kr", "korean");
+            put("my", "english");
+            put("nz", "english");
+            put("ph", "english");
+            put("sg", "english");
+            put("tw", "chinese");
+            put("th", "thai");
+            put("at", "german");
+            put("be", "dutch");
+            put("be", "french");
+            put("dk", "danish");
+            put("fi", "finnish");
+            put("fr", "french");
+            put("de", "german");
+            put("ie", "english");
+            put("it", "italian");
+            put("nl", "dutch");
+            put("no", "norwegian");
+            put("pt", "portuguese");
+            put("es", "spanish");
+            put("se", "swedish");
+            put("ch", "german");
+            put("ch", "french");
+            put("gb", "english");
         }
     };
+
+
     private String id;
     private String url;
     private String title; // html: id="main-title"
     private String pageSource;
     private Date lastUpdated; // last time object was modified
-    private Boolean visited; // true if page source is stored locally
-    private int totalLinks;
+    private Boolean visited; // true if page source is stored locally (Webpage is treated like a node in a tree)
     private int totalDOMNodes;
     private Map<String, String> modules;
-    private String sourceFilePath;
+    private String sourceFilePath; // this should only be in class WebGraphFile
+    private String region;
 
     /***************
         Constructors
@@ -51,35 +69,27 @@ public class WebPage {
     /*
         This default constructor should never be used because a WebPage needs to have a (unique) url.
      */
-    private WebPage() {
-
-        visited = false;
-        modules = new HashMap<String, String>();
-    }
+    private WebPage() { }
 
     /*
         Check if webpage can be retrieved locally. The page source will not be stored in the object if
         it has been persisted to a file in order to reduce memory consumption.
      */
-    WebPage(WebPage p) {
+    public WebPage(WebPage p) {
         this.url = p.url;
         this.id = p.id;
         this.lastUpdated = p.lastUpdated;
         this.visited = p.visited;
         this.totalDOMNodes = 0;
+        this.region = p.region;
         modules = new HashMap<String, String>();
 
-        // initialize object with previously persisted data
-        WebGraphFile webPageDir = new WebGraphFile(this);
-        sourceFilePath = webPageDir.GetWebPageSourceFilePath(this);
-        if(sourceFilePath != null)
-            this.visited = true;
     }
 
     /**
         Create a webpage with a url. Member data will be initialized if data files exist.
      */
-    WebPage(String url) {
+    public WebPage(String url) {
         this.url = url;
         this.id = GenerateID(url);
         this.lastUpdated = new Date();
@@ -87,12 +97,7 @@ public class WebPage {
         this.totalDOMNodes = 0;
         modules = new HashMap<String, String>();
 
-        // initialize object with previously persisted data
-        WebGraphFile webPageDir = new WebGraphFile(this);
-        sourceFilePath = webPageDir.GetWebPageSourceFilePath(this);
-        System.out.println("Webpage(url): sourceFilePath: " + sourceFilePath);
-        if(sourceFilePath != null)
-            this.visited = true;
+        this.region = ExtractRegion();
     }
 
     /******************
@@ -141,6 +146,7 @@ public class WebPage {
         }
     }
 
+    public void SetRegion(String region) { this.region = region; }
     /*************
         Accessors
      *************/
@@ -180,6 +186,8 @@ public class WebPage {
     public String GetModule(String key) {
         return modules.get(key);
     }
+
+    public String GetRegion() { return region; }
 
     @Override
     public int hashCode() {
@@ -231,10 +239,30 @@ public class WebPage {
             urlid = urlid.substring(8);
 
         // remove special characters
-        urlid = urlid.replaceAll("(\\.)|(/)|(\\?)|(=)|(&)|(-)|(#)|(%)|(\\+)|(')","");
+        urlid = urlid.replaceAll("(\\.)|(/)|(\\?)|(=)|(&)|(-)|(#)|(%)|(\\+)|(')|(:)","");
 
         return urlid;
     }
 
+    /**
+        Extract the region of the webpage from the id which is generated from the url.
+     */
+    private String ExtractRegion() {
+        String region;
+
+        String localizationSuffix = id.substring(id.length()-4);
+        if(localizationSuffix.equals("frca"))
+            region = "fr-ca";
+        else if(localizationSuffix.equals("frbe"))
+            region = "fr-be";
+        else if(localizationSuffix.equals("frch"))
+            region = "fr-ch";
+        else if(localizationSuffix.equals("enhk"))
+            region = "en-hk";
+        else
+            region = id.substring(14,16);
+
+        return region;
+    }
 
 }
