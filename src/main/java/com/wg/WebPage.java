@@ -14,12 +14,12 @@ public class WebPage {
         {
             put("br", "portuguese");
             put("ca", "english");
-            put("ca", "french");
+            put("fr-ca", "french");
             put("mx", "spanish");
             put("pr", "spanish");
             put("au", "english");
             put("hk", "chinese");
-            put("hk", "english");
+            put("en-hk", "english");
             put("in", "english");
             put("id", "indonesian");
             put("jp", "japanese");
@@ -32,7 +32,7 @@ public class WebPage {
             put("th", "thai");
             put("at", "german");
             put("be", "dutch");
-            put("be", "french");
+            put("fr-be", "french");
             put("dk", "danish");
             put("fi", "finnish");
             put("fr", "french");
@@ -45,7 +45,7 @@ public class WebPage {
             put("es", "spanish");
             put("se", "swedish");
             put("ch", "german");
-            put("ch", "french");
+            put("fr-ch", "french");
             put("gb", "english");
         }
     };
@@ -55,6 +55,7 @@ public class WebPage {
     private String url;
     private String title; // html: id="main-title"
     private String pageSource;
+    private String text;
     private Date lastUpdated; // last time object was modified
     private Boolean visited; // true if page source is stored locally (Webpage is treated like a node in a tree)
     private int totalDOMNodes;
@@ -83,15 +84,15 @@ public class WebPage {
         this.totalDOMNodes = 0;
         this.region = p.region;
         modules = new HashMap<String, String>();
-
     }
 
     /**
         Create a webpage with a url. Member data will be initialized if data files exist.
      */
     public WebPage(String url) {
-        this.url = url;
-        this.id = GenerateID(url);
+
+        this.url = CleanUrl(url);
+        this.id = GenerateID(this.url);
         this.lastUpdated = new Date();
         this.visited = false;
         this.totalDOMNodes = 0;
@@ -121,6 +122,8 @@ public class WebPage {
     public void SetVisited() {
         visited = true;
     }
+
+    public void SetText(String text) { this.text = text; }
 
     public void SetTotalDOMNodes(int total) {
         totalDOMNodes = total;
@@ -174,6 +177,8 @@ public class WebPage {
     public Date GetLastUpdateDate() {
         return lastUpdated;
     }
+
+    public String GetText() { return this.text; }
 
     public boolean GetVisited() {
         return visited;
@@ -259,10 +264,30 @@ public class WebPage {
             region = "fr-ch";
         else if(localizationSuffix.equals("enhk"))
             region = "en-hk";
-        else
-            region = id.substring(14,16);
+        else if(id.equals("storegooglecom")) {
+            region = "us";
+        }
+        else {
+            // get the region code from the url path
+            region = id.substring(14, 16);
+        }
 
         return region;
     }
+
+    /**
+         This function will clean up the id and url (remove host language query if unneccessary).
+        This function is called in the WebPage constructor.
+     */
+    private String CleanUrl(String url) {
+        String urlSuffix = url.substring(url.length() - 9);
+        if(urlSuffix.contains("hl=") && !urlSuffix.contains("fr-ca") && !urlSuffix.contains("fr-be") &&
+                !urlSuffix.contains("fr-ch") && !urlSuffix.contains("en-hk")) {
+            url = url.substring(0, url.length() - 9);
+        }
+
+        return url;
+    }
+
 
 }
