@@ -1,4 +1,9 @@
 package com.wg;
+import org.openqa.selenium.firefox.FirefoxBinary;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.firefox.FirefoxProfile;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.util.*;
@@ -54,6 +59,22 @@ public class MyUtil {
         java.io.File infile = new java.io.File(filePath);
         return links;
 
+    }
+
+    /**
+     Create a FirefoxDriver with options enabled.
+     */
+    public static FirefoxDriver CreateFFDriver() {
+        FirefoxBinary firefoxBinary = new FirefoxBinary();
+        firefoxBinary.addCommandLineOptions("--headless");
+        firefoxBinary.addCommandLineOptions("--load-images=no");
+        FirefoxProfile firefoxProfile = new FirefoxProfile();
+        firefoxProfile.setPreference("permissions.default.image", 2);
+        FirefoxOptions firefoxOptions = new FirefoxOptions();
+        firefoxOptions.setBinary(firefoxBinary);
+        firefoxOptions.setProfile(firefoxProfile);
+
+        return new FirefoxDriver(firefoxOptions);
     }
 }
 
