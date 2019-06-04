@@ -10,43 +10,44 @@ import java.util.*;
  */
 public class WebPage {
 
-    public static HashMap<String, String> regions = new HashMap<String, String>() {
+    private static HashMap<String, String> regions = new HashMap<String, String>() {
         {
+            put("at", "german");
+            put("au", "english");
+            put("be", "dutch");
             put("br", "portuguese");
             put("ca", "english");
-            put("fr-ca", "french");
-            put("mx", "spanish");
-            put("pr", "spanish");
-            put("au", "english");
-            put("hk", "chinese");
-            put("en-hk", "english");
-            put("in", "english");
-            put("id", "indonesian");
-            put("jp", "japanese");
-            put("kr", "korean");
-            put("my", "english");
-            put("nz", "english");
-            put("ph", "english");
-            put("sg", "english");
-            put("tw", "chinese");
-            put("th", "thai");
-            put("at", "german");
-            put("be", "dutch");
-            put("fr-be", "french");
+            put("ch", "german");
+            put("de", "german");
             put("dk", "danish");
+            put("en-hk", "english");
+            put("es", "spanish");
             put("fi", "finnish");
             put("fr", "french");
-            put("de", "german");
-            put("ie", "english");
-            put("it", "italian");
-            put("nl", "dutch");
-            put("no", "norwegian");
-            put("pt", "portuguese");
-            put("es", "spanish");
-            put("se", "swedish");
-            put("ch", "german");
+            put("fr-be", "french");
+            put("fr-ca", "french");
             put("fr-ch", "french");
             put("gb", "english");
+            put("hk", "chinese");
+            put("id", "indonesian");
+            put("ie", "english");
+            put("in", "english");
+            put("it", "italian");
+            put("jp", "japanese");
+            put("kr", "korean");
+            put("mx", "spanish");
+            put("my", "english");
+            put("nl", "dutch");
+            put("no", "norwegian");
+            put("nz", "english");
+            put("ph", "english");
+            put("pr", "spanish");
+            put("pt", "portuguese");
+            put("se", "swedish");
+            put("sg", "english");
+            put("th", "thai");
+            put("tw", "chinese");
+            put("us", "english");
         }
     };
 
@@ -91,8 +92,8 @@ public class WebPage {
      */
     public WebPage(String url) {
 
-        this.url = CleanUrl(url);
-        this.id = GenerateID(this.url);
+        this.url = CleanUrl(url); //System.out.println("Cleaned url: " + this.url);
+        this.id = GenerateID(this.url); //System.out.println("Generated Id: " + this.id);
         this.lastUpdated = new Date();
         this.visited = false;
         this.totalDOMNodes = 0;
@@ -104,6 +105,13 @@ public class WebPage {
     /******************
         Public Methods
      ******************/
+
+    /**
+     * There is a main nav.
+     * Search for class="help-link"
+     * @return
+     */
+
 
     /************
         Mutators
@@ -194,6 +202,14 @@ public class WebPage {
 
     public String GetRegion() { return region; }
 
+    public static HashMap<String, String> GetAllRegionCodes() {
+        return regions;
+    }
+
+    public static TreeSet<String> GetAllRegionCodesSorted() {
+        return new TreeSet<>(regions.keySet());
+    }
+
     @Override
     public int hashCode() {
         return (id == null) ? 0 : id.hashCode();
@@ -246,7 +262,7 @@ public class WebPage {
         // remove special characters
         urlid = urlid.replaceAll("(\\.)|(/)|(\\?)|(=)|(&)|(-)|(#)|(%)|(\\+)|(')|(:)","");
 
-        return urlid;
+        return urlid.toLowerCase();
     }
 
     /**
@@ -258,8 +274,8 @@ public class WebPage {
         String localizationSuffix = id.substring(id.length()-4);
         if(localizationSuffix.equals("frca"))
             region = "fr-ca";
-        else if(localizationSuffix.equals("frbe"))
-            region = "fr-be";
+        else if(localizationSuffix.equals("befr"))
+            region = "be-fr";
         else if(localizationSuffix.equals("frch"))
             region = "fr-ch";
         else if(localizationSuffix.equals("enhk"))
@@ -268,22 +284,36 @@ public class WebPage {
             region = "us";
         }
         else {
-            // get the region code from the url path
-            region = id.substring(14, 16);
+            String potentialRegion = id.substring(14, 16);
+            if(regions.containsKey(potentialRegion) &&
+                    !((id.length() > 20 && id.substring(14, 21).equals("product")) ||
+                            (id.length() > 21 && id.substring(14,22).equals("category"))))
+                region = potentialRegion;
+            else
+                region = "us"; // the URL is US region if no region code is specified in path
         }
 
         return region;
     }
 
     /**
-         This function will clean up the id and url (remove host language query if unneccessary).
+         This function will clean up the id and url (remove host language query if unneccessary). Host language
+        query is considered unnecessary if the region pages are only created in one language.
         This function is called in the WebPage constructor.
+        Currently it is designed to handle store.google.com domain.
+
+        Examples:
+        https://store.google.com/th/?hl=th-TH -> https://store.google.com/th/
+
      */
     private String CleanUrl(String url) {
-        String urlSuffix = url.substring(url.length() - 9);
-        if(urlSuffix.contains("hl=") && !urlSuffix.contains("fr-ca") && !urlSuffix.contains("fr-be") &&
+        int HLQStrLength = 9; // = (new String("?hl=fr-CA")).length()
+        String urlSuffix = url.substring(url.length() - HLQStrLength); // no out of bounds error since minimum length is way beyond 9
+        if(urlSuffix.contains("hl=") && !urlSuffix.contains("fr-CA") && !urlSuffix.contains("be-FR") &&
+                !urlSuffix.contains("fr-CH") && !urlSuffix.contains("en-HK") && !urlSuffix.contains("fr-ca") && !urlSuffix.contains("be-fr") &&
                 !urlSuffix.contains("fr-ch") && !urlSuffix.contains("en-hk")) {
-            url = url.substring(0, url.length() - 9);
+
+            url = url.substring(0, url.length() - HLQStrLength);
         }
 
         return url;

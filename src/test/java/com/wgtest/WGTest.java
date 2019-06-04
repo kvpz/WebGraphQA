@@ -1,5 +1,6 @@
 package com.wgtest;
 
+import com.wg.WebPage;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -38,14 +39,16 @@ public class WGTest {
         return links;
     }
 
-    public static void main(String[] s) {
-        FirefoxDriver fd = new FirefoxDriver();
-        fd.get("https://store.google.com/");
-        ArrayList<String> links = (ArrayList<String>)getLinks(fd);
-        for (String link : links) {
-            System.out.println(link);
-        }
-        fd.close();
+
+
+    public static void main(String[] s) throws Exception {
+        WebPage wpage = new WebPage("https://store.google.com/ca/product/test?hl=fr-CA");
+        System.out.println(wpage.GetUrl());
+        System.out.println(wpage.GetId());
+
+        //WebGraphFile wgf = new WebGraphFile(wpage);
+        //wgf.WriteWebPageToFile(wpage);
+
     }
 
     /*

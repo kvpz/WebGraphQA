@@ -40,11 +40,9 @@ TODO: Data needs to be stored on disk to perform offline website analysis and to
 TODO: GUI
 TODO: Ability to pause and continue web crawling.
 TODO: Save crawling status to disk in order to continue during another session.
-TODO: Work on graph design and invoke limitations (No WebPage without graph)
 TODO: (project specific) identify module types (ex, is it a carousel, video, )
 TODO: Build a TraversalFactory. This class would contain different types of traversals with embedded functionality in order to achieve a fruitful travel.
 TODO: Collect the total amount of images and the size of each image for each page.
-TODO: Keep track of module ids in order to find possible duplicates of a module across the site which would be good for retesting.
 TEST: Verify the Buy buttons link to the correct config page (check if products match)
 <h1 class="title-text header-text-3" itemprop="name">product_name</h1>
 TODO: Create toggles: overwrite, overwrite if
@@ -84,3 +82,74 @@ Exception in thread "main" org.openqa.selenium.StaleElementReferenceException: T
 This exception says a lot about how inefficient the webdriver is at analyzing static html.  All I want to do is extract the value for the href attribute, which does not need javascript in order for it to appear in the viewport.
 When there is time, the evaluation of static html files can be optimized by using a binding to the C library MyHTML (https://github.com/lexborisov/myhtml)
 
+There are a total of 36 ids across the US only.  I hope that is the maximum amount across all regions.
+The point of gathering the ids of the modules is that we can be able to assign automated user interactions based on the
+id of the modules. Each module may have a set of "viewport actions." By that I mean that each viewport will respond to different actions.
+Mostly the difference will be the action of swiping on mobile.... but you can swipe both on mobile and on desktop.
+
+
+Be able to get an average of lighthouse metrics (even though running tests on simulated takes an average (but it's better to be safe than sorry)).
+Basically just do a 1 to 1 matching (should be the same for the same page from run to run, but, to be safe, check that
+the keys / key paths are the same and then get the values to find the average.
+
+
+Webpages to download manually:
+store.google.com/my/product/chromecast_2015
+store.google.com/my/product/chromecast_2015_specs
+store.google.com/my/product/chromecast_2015_apps
+store.google.com/my/product/chromecast_2015_learn
+
+Visiting the above webpages without the 2015 appended will still lead to these pages, but the URL changes to
+https://store.google.com/my/product/chromecast_2015?srp=/my/product/chromecast for example.
+
+
+URLs that are not hyperlinked contain, or are, the following URLs
+g.co
+goo.gl
+
+
+data-configure-url in product page should match current except "config" in url path
+data-back-url in config should be match the current except for "product" in url path
+
+Good to know information:
+https://developers.google.com/search/reference/robots_txt
+
+
+2019-29-04
+
+Create a bash script to execute tests using copies of the same executable.
+
+Create a diff function with various "diffy levels"
+
+
+https://store.google.com/hk/product/google_wifi
+To get the chinese copy, the host language query string needs to be appended to the URL.
+
+storegooglecomprproductpixel_3a_switch
+storegooglecomgbproductgoogle_nest_hub_max
+storegooglecomusproductpixel_3a_switch
+storegooglecomusproductgoogle_nest_hub_max
+storegooglecomusproductpixel_3a_how_to_buy
+ needs to be re-downloaded because not all links were inserted by JS.
+
+ There are many config pages that have a scrollview embeded within the main body element.  The reason why the config
+ menu is in a scrollview is because the footer content is not within the same element as the config menu.  Actually, it's
+ because there is no legal copy in the footer. Actually, it is because of neither of those last two statements.
+
+
+
+Express vpn: EoiXcs72 password
+
+Test that all help links on mobile link to the correct region.
+
+
+A good test would be to search elements that contain no content within. Also checking for elements that are repeated.  This
+happened recently on the Google Home Mini Tech Specs page where there was a hidden module which was the same as the current
+module, except some minor differences like the values assigned to the data-type attribute.  One thing that can be compared
+is the text/ copy of a module (but not all modules contain copy).  Another comparison to do is to compare the images downloaded.
+
+GB, IT, nest learning thermostat is missing? Why?
+https://store.google.com/it/product/pixel_3_switch redirected to http://www.no.com/
+
+Look for attribute "mqn2-mobile-only" because if a page does not have it (idk if all would have it), then it is not
+mobile friendly.

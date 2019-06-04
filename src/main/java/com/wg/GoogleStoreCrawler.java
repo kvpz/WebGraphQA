@@ -1,20 +1,24 @@
 package com.wg;
-import org.jgrapht.graph.DefaultDirectedGraph;
+
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DirectedMultigraph;
+import org.jgrapht.io.ComponentNameProvider;
+import org.jgrapht.io.DOTExporter;
+import org.jgrapht.io.GraphExporter;
 import org.jgrapht.traverse.BreadthFirstIterator;
 import org.jgrapht.traverse.GraphIterator;
-import org.openqa.selenium.*;
-import org.openqa.selenium.firefox.FirefoxBinary;
+import org.openqa.selenium.By;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.firefox.FirefoxProfile;
 
-import java.net.URI;
-import java.util.*;
 import java.io.*;
-import java.nio.file.Path;
-
-import org.jgrapht.io.*;
-import org.jgrapht.*;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.function.Supplier;
 
 /**
     @class GoogleStoreCrawler
@@ -45,6 +49,8 @@ import org.jgrapht.*;
 
     Contact me if you want some data retrieved from traversals using this very program.
 
+    Thrown in ExportGraph() 4-18-2019 (probably because of the colon) GenerateID in class WebPage has been updated to remove colons.
+    java.lang.RuntimeException: Generated id 'wwwgooglecomurlqhttps:playgooglecomstoreappsdetailsid3DcomgooglesamplesappscardboarddemosaDusgAFQjCNGj9zd2CsH9dpD7Knly4Y7MqXdBnQ'for vertex '(wwwgooglecomurlqhttps:playgooglecomstoreappsdetailsid3DcomgooglesamplesappscardboarddemosaDusgAFQjCNGj9zd2CsH9dpD7Knly4Y7MqXdBnQ,https://www.google.com/url?q=https://play.google.com/store/apps/details?id%3Dcom.google.samples.apps.cardboarddemo&sa=D&usg=AFQjCNGj9zd2CsH9dpD7Knly4Y7MqXdBnQ)' is not valid with respect to the .dot language
 
  */
 
@@ -56,14 +62,9 @@ public class GoogleStoreCrawler {
     static Date DATE = new Date(); // the time this program is executed
     static FileWriter runtimeLogFile = null; // file writer for runtime logging
     static Graph<WebPage, WebPageEdge> webGraph; // the main graph structure
-    static boolean overwrite = false; // moving to class WebGraphFile
-    static FirefoxDriver fd = CreateFFDriver();
+    static FirefoxDriver fd = MyUtil.CreateFFDriver();
     static HashSet<String> linksFound;
 
-    /**
-        Set caching on if requesting the page with a web driver is not desired
-     */
-    boolean caching = true;
 
     // The website's homepage
     static final String WEBSITE = "store.google.com";
@@ -73,24 +74,10 @@ public class GoogleStoreCrawler {
      This will create and add a page to the graph.
      */
     public static void AddPageToGraph(Graph<WebPage, WebPageEdge> g, WebPage page) {
-        webGraph.addVertex(page);
+        if(webGraph.addVertex(page)) { System.out.println(page.GetUrl() + " vertex added"); }
+        else { System.out.println(page.GetUrl() + " vertex NOT added"); }
     }
 
-    /**
-     Create a FirefoxDriver with options enabled.
-     */
-    static FirefoxDriver CreateFFDriver() {
-        FirefoxBinary firefoxBinary = new FirefoxBinary();
-        firefoxBinary.addCommandLineOptions("--headless");
-        firefoxBinary.addCommandLineOptions("--load-images=no");
-        FirefoxProfile firefoxProfile = new FirefoxProfile();
-        firefoxProfile.setPreference("permissions.default.image", 2);
-        FirefoxOptions firefoxOptions = new FirefoxOptions();
-        firefoxOptions.setBinary(firefoxBinary);
-        firefoxOptions.setProfile(firefoxProfile);
-
-        return new FirefoxDriver(firefoxOptions);
-    }
 
     /**
         This function will collect all links on a page.
@@ -110,8 +97,8 @@ public class GoogleStoreCrawler {
         [3] <a class="mqn-abf mqn-abp" href="https://support.google.com/store/answer/6380752?hl=en-US" mqn-autotrack-label="https://support.google.com/store/answer/6380752" target="_blank"></a>
             webElement.getAttribute("pathname") will get the path for the absolute url assigned to href.
 
-     pathname: //Users/kevin/IdeaProjects/GoogleStoreQA/WebGraph/storegooglecomproductgoogle_pixelbook/source.html
-     href: file:////Users/kevin/IdeaProjects/GoogleStoreQA/WebGraph/storegooglecomproductgoogle_pixelbook/source.html#
+        pathname: //Users/kevin/IdeaProjects/GoogleStoreQA/WebGraph/storegooglecomproductgoogle_pixelbook/source.html
+        href: file:////Users/kevin/IdeaProjects/GoogleStoreQA/WebGraph/storegooglecomproductgoogle_pixelbook/source.html#
      */
     public static List<String> getLinks() {
         String[] tags = {"a"}; //, "area", "base", "link"};
@@ -126,27 +113,30 @@ public class GoogleStoreCrawler {
                     String urlToAdd = null;
                     String refPath = webElement.getAttribute("pathname"); // get the path of the href value
                     String refLink = webElement.getAttribute("href"); // get entire href value
-                    System.out.println("pathname: " + refPath + "\n" + "href: " + refLink);
+                    //System.out.println("pathname: " + refPath + "\n" + "href: " + refLink);
 
                     if(refPath == null || refLink == null) continue;  // no value assigned to href
                     if(refPath.equals("#") || refPath.equals("/") || refPath.contains("WebGraph")) continue; // do not add link for current page
 
                     if(refLink.contains("http") && !refLink.contains(WEBSITE)) { // href value is external link (assumed because it is an absolute path)
                         urlToAdd = refLink;
-                        System.out.println("urlToAdd: " + urlToAdd);
+                        // Test external link open in new tab
+                        if(!refLink.contains("accounts.google.com") &&
+                                !refLink.contains("itunes.apple.com") &&
+                                !refLink.contains("play.google.com") &&
+                                !GoogleStoreTests.ExternalLinkOpensInNewTab(webElement)) {
+                            // accounts.google.com will be considered as non-external
+                            System.out.println("External link in " + fd.getCurrentUrl() + " opens in same tab. link: " + refLink);
+                        }
                     }
-                    //else if(refLink.contains("WebGraph")) {
-                        // remove local file path
-                    //}
                     else { // href value is relative to the website domain
                         urlToAdd = "https://" + WEBSITE + refPath;
-                        System.out.println("urlToAdd: " + urlToAdd);
                     }
 
                     links.add(urlToAdd);
                 }
                 catch(StaleElementReferenceException e){
-                    System.out.println("Exception in getLinks" + e);
+                    //System.out.println("Exception in getLinks" + e);
                 }
             }
         }
@@ -168,10 +158,13 @@ public class GoogleStoreCrawler {
 
         for(String url : getLinks()) {
             if (url != null) {
-                System.out.println("Adding webpage " + url + " to graph");
                 WebPage relPage = new WebPage(url);
                 webGraph.addVertex(relPage);
-                webGraph.addEdge(webPage, relPage, new WebPageEdge("to"));
+
+                // avoid self loops in multigraph
+                if(relPage.GetId().equals(webPage.GetId())) continue;
+
+                webGraph.addEdge(webPage, relPage, new WebPageEdge(relPage.GetUrl()));
             }
         }
     }
@@ -303,13 +296,19 @@ public class GoogleStoreCrawler {
         do {
             WebPage webPage = (WebPage) webGraphItr.next();
 
+            // Tests if 404
+            if(GoogleStoreTests.Is404(webPage)) {
+                System.out.println("404 " + webPage.GetUrl());
+                //Set<WebPageEdge> webPageEdges = webGraph.edgesOf(webPage); // try to find parent of webpage
+                //webPageEdges.forEach(e -> System.out.print(webGraph. + "  "));
+            }
+
             AddPageToGraph(webGraph, webPage); // add a new vertex regardless of webpage domain
 
             // visit webpage that belongs to store.google.com that has not been visited by traversal
             if(!webPage.GetVisited() && GetUrlDomain(webPage.GetUrl()).contains(WEBSITE) &&
                 webPage.GetPageSourcePath() == null) {
 
-                System.out.println("Visiting page: " + webPage.GetUrl());
                 VisitPage(webPage);
 
                 // store webpage locally
@@ -321,15 +320,13 @@ public class GoogleStoreCrawler {
                 fd.get("file:///" + webPage.GetPageSourcePath());
             }
 
-            System.out.println("Adding links to graph from " + fd.getCurrentUrl());
             if(webPage.GetUrl().contains(WEBSITE)) {
                 linksFound.add(webPage.GetUrl());
                 StorePageLinksInGraph(webPage); // will not store links if page is not under store.google.com
             }
 
-            System.out.println("Ending traversal iteration. Graph size: " + startGraphSize + " counter: " + traversalCounter);
+            //System.out.println("Ending traversal iteration. Graph size: " + startGraphSize + " counter: " + traversalCounter);
         } while(++traversalCounter < startGraphSize); // && traversalCounter < traversalLimiter);
-        System.out.println("Leaving TraverseGraph()");
     }
 
     /**
@@ -348,6 +345,14 @@ public class GoogleStoreCrawler {
         }while(graphSize != webGraph.vertexSet().size()); // && traversalCounter < traversalLimiter);
     }
 
+    private static void InitializeGraph() {
+        Supplier<WebPage> webPageSupplier = null;
+        Supplier<WebPageEdge> webPageEdgeSupplier = null;
+        //webGraph = new DirectedMultigraph<WebPage, WebPageEdge>(webPageSupplier, webPageEdgeSupplier, false);
+        webGraph = new DirectedMultigraph<>(WebPageEdge.class);
+
+    }
+
     /**
         Crawl the entire website. Tests can be added within Traverse (within any code reached by that function).
      */
@@ -360,9 +365,9 @@ public class GoogleStoreCrawler {
         FileWriter outLinksFile = null;
         File linksFile = null;
         try {
+            // store the URLs previously visited into memory (hashset)
             linksFile = new File("GStoreLinks.dat");
             inLinksFile = new FileReader(linksFile);
-            // Store unique links in hashset
             BufferedReader bufInLinksFile = new BufferedReader(inLinksFile);
             bufInLinksFile.lines().forEach(l -> linksFound.add(l));
             bufInLinksFile.close();
@@ -373,14 +378,16 @@ public class GoogleStoreCrawler {
         }
 
 
+        InitializeGraph();
 
-        // Instantiate graph
-        WebPage startPage = new WebPage("https://store.google.com/product/pixel_3");
-        webGraph = new DefaultDirectedGraph(WebPageEdge.class);
+        WebPage startPage = new WebPage("https://store.google.com/");
+
+        //webGraph = new DefaultDirectedGraph(WebPageEdge.class);
         AddPageToGraph(webGraph, startPage); // creates and adds webpage vertex to graph
 
         // traverse graph
         Traverse();
+
 
         System.out.println("Total vertices: " + webGraph.vertexSet().size());
         System.out.println("Total runtime: " + ((new Date()).getTime() - DATE.getTime()) / 1000.0f + "s");
@@ -388,8 +395,8 @@ public class GoogleStoreCrawler {
         try {
             outLinksFile = new FileWriter(linksFile);
             BufferedWriter bufOutLinksFile = new BufferedWriter(outLinksFile);
-            for(String link : linksFound) {
-                bufOutLinksFile.write(link);
+            for(WebPage link : webGraph.vertexSet()) {
+                bufOutLinksFile.write(link.GetUrl());
                 bufOutLinksFile.newLine();
             }
             bufOutLinksFile.close();
