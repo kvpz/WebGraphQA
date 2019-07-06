@@ -34,9 +34,11 @@ public class MyUtil {
      and retrieve it when needed.
      */
     public static String CreateURLFromWebpageDirName(String dir) {
+        String hostname_concatenated = "storegooglecom";
+
         //System.out.println("Creating URL from dir: " + dir);
         // if not a store.google.com directory, return null
-        if(!dir.contains("storegooglecom"))
+        if(!dir.contains(hostname_concatenated))
             return null;
 
         String domain = "https://store.google.com/";
@@ -49,6 +51,7 @@ public class MyUtil {
 
         if(WebPage.GetAllRegionCodes().keySet().contains(potentialRegion)) {
             // handle Puerto Rico region code and "product" conflict
+            // handle Canada region code and "category" conflict
             if(potentialRegion.equals("pr") && dir.length() > 16 && dir.charAt(16) == 'o') { } // not a region code
             else if(potentialRegion.equals("ca") && dir.length() > 16 && dir.charAt(16) == 't') {}
             else {
@@ -56,8 +59,10 @@ public class MyUtil {
                 path = dir.substring(16); // append the rest of the dir name
             }
         }
-        else
-            potentialRegion = "";
+        else {
+            // what follows the hostname is not valid; return null
+            return null;
+        }
 
         if(dir.equals("storegooglecom")) {
             url = domain;
@@ -87,6 +92,10 @@ public class MyUtil {
             path = "magazine/" + temp;
             url += path;
         }
+        else {
+            // the url path is not valid; return null
+            return null;
+        }
 
         // add localization host language query parameter to url
         if(path.length() > 7 && path.substring(path.length() - 6).contains("hl") && !path.isEmpty()) {
@@ -104,7 +113,7 @@ public class MyUtil {
      */
     public static List<String> GetDirectoryListing(String path) {
         File f = new File(path);
-        if(f.list() == null) {System.out.println(path);}
+        if(f.list() == null) {System.out.println("NULL: " + path);}
         return Arrays.asList(f.list());
 
     }
@@ -119,6 +128,16 @@ public class MyUtil {
         return f;
     }
 
+
+    /**
+     * Get the url of the page linked to when the transaction button is pressed.
+     * The transaction button can be found on the Overview page for a product. This function will return a single
+     * URL. There should be two links on the page, one for mobile and one for desktop view.  If there is more or less
+     * than 2 links, then an exception will be thrown, and an empty string will be returned.
+     */
+    public static String GetTransactionButtonURL(String html) {
+        return new String();
+    }
 
     /**
      *
@@ -148,7 +167,7 @@ public class MyUtil {
      */
     public static FirefoxDriver CreateFFDriver() {
         FirefoxBinary firefoxBinary = new FirefoxBinary();
-        firefoxBinary.addCommandLineOptions("--headless");
+        //firefoxBinary.addCommandLineOptions("--headless");
         firefoxBinary.addCommandLineOptions("--load-images=no");
         FirefoxProfile firefoxProfile = new FirefoxProfile();
         firefoxProfile.setPreference("permissions.default.image", 2);
@@ -169,9 +188,10 @@ public class MyUtil {
     }
 
     public static void main(String[] args) {
-        for(File dir : WebGraphFile.GetAllDirsFromRegion("ca")) {
-            System.out.println(dir.getName());
-            System.out.println(CreateURLFromWebpageDirName(dir.getName()));
+        for(File regionDir : WebGraphFile.GetAllRegionDirs()) {//.GetAllDirsFromRegion("ca")) {
+            for(File dir : WebGraphFile.GetAllDirsFromRegion(regionDir.getName())) {
+                System.out.println(CreateURLFromWebpageDirName(dir.getName()));
+            }
         }
     }
 }
