@@ -2,5 +2,57 @@ I need some help with logging and writing tests.
 
 Tests should be implemented under src/main/java/com.wg/GoogleStoreTests.java
 
-Similar projects
+src/main/java/com.wg
+This folder will contain all the functions and programs for testing the website.
+
+/src/test/java/com.wgtest
+This folder will contain tests against the functions used to test the website.
+
+
+## Design
+This documentation was started after about 2 months writing tests against store.google.com.  Over this time period, I have expanded on the design a bit.
+The following will be a description of how I lead the design of this project.
+
+I wrote separate classes with a main method focusing on performing tests related.
+
+The following tests performed:
+Check for aria label values.  There is a test that will get all the values for aria label across the entire website and print them out.  I would then read them
+checking:
+
+Tests performed on copy:
+    1) localization.  All the text that would be displayed in viewports is printed and manually analyzed.
+    2) characters that are not in the localized language.  For example, there shouldn't be characters like ">" in the aria-label values.
+
+    Text I was concerned:
+        * text within the elements.  Calling Selenium's or JSoup's "text" function would return all this text.
+        * the values of the aria-label attributes
+        * a page's meta description element (found in the head element) <meta description="...">.  This copy can be seen on a search engine's results page
+        * the value for the content attributes of the meta elements found in the HTML head.  Besides localization, it's important to make sure that these are relevant to the page.
+        * values of the alt attributes. Again, it is important that these are relevant to the element they are a part of.
+
+
+        Note: these pages must be analyzed under UTF-8 encoding. This must be declared when using JSoup's parse function which takes an argument
+            asking the character encoding of the HTML document.
+
+Tests performed on UI/ UX:
+    1) Check for disappearing nav bar. There is a nav bar on the PDPs that would disappear after scrolling down the page
+       and resizing the viewport.  It would reappear after scrolling back to the top and resizing the browser.  As of 07/05/2019, this is still an issue.
+    2) link analysis.  Pages should always have a link.  All links should link to a valid page (not a 404 or redirect, which may signal as a 500 error)
+    3) TODO: automatic slideshow (or carousel) rotation speed.  Each element should be displayed for the same amount of time.  I noticed that the rotations may vary for some carousels after
+        scrolling up and down a page rapidly a few times.  A page that was victim of such a carousel is the Overview PDP for the Google Nest Learning Thermostat.
+    4)
+
+Helper functions:
+    1) TODO: Auto-rotating carousel detection: be able to identify whether an element contains a carousel/ slideshow.  A method could be written that will return a signal if an element has undergone changes, or values
+        have been updated.  I could start by the body HTML element, and every time a change is detected, I would proceed to the next child element.  This process can be continued
+        until a change occurs in the currently selected outer html (the value for one of the tag's attributes would have to be changed).  Once one of these elements are detected (after a
+        period of about 10 seconds), log the current element in a file  (for manual verification) to guarantee that it is not analyzed again.  Then, crawl back up the current
+        branch (until a sibling can be found).  The repeat the process of crawling down the sibling branch until another autorotating carousel is detected or there is nothing left to crawl.
+        This can all be packed into a function that will return an array of the outer html of elements.
+    2) Get all modules.  Modules are div elements with a class attribute with the value "page-module."  This can be found under the Modules class.
+    3)
+
+
+
+Similar projects for inspiration
 http://webgraph.di.unimi.it/
