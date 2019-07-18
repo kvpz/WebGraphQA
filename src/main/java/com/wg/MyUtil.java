@@ -1,4 +1,5 @@
 package com.wg;
+
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
@@ -12,6 +13,36 @@ import java.util.*;
     Miscellaneous helpful functions
  */
 public class MyUtil {
+
+    /*
+    // http://gs.statcounter.com/screen-resolution-stats
+    // set of viewports (width, height) ordered by width
+    public static HashSet<Pair<Integer, Integer>> viewportDimensions = new HashSet<Pair<Integer, Integer>>(){
+            {
+                add(new Pair<Integer, Integer>(360,640));
+                add(new Pair<Integer, Integer>(360,720));
+                add(new Pair<Integer, Integer>(375, 667));
+                add(new Pair<Integer, Integer>(414, 736));
+                add(new Pair<Integer, Integer>(600, 1024));
+                add(new Pair<Integer, Integer>(601, 962));
+                add(new Pair<Integer, Integer>(720, 1280));
+                add(new Pair<Integer, Integer>(768, 1024)); // most common tablet resolution
+                add(new Pair<Integer, Integer>(800, 1280));
+                add(new Pair<Integer, Integer>(834, 1112));
+                add(new Pair<Integer, Integer>(962, 601));
+                add(new Pair<Integer, Integer>(1024, 768));
+                add(new Pair<Integer, Integer>(1024, 1366));
+                add(new Pair<Integer, Integer>(1280, 720));
+                add(new Pair<Integer, Integer>(1280, 800));
+                add(new Pair<Integer, Integer>(1280, 1024));
+                add(new Pair<Integer, Integer>(1366, 768));
+                add(new Pair<Integer, Integer>(1440, 900));
+                add(new Pair<Integer, Integer>(1536, 864));
+                add(new Pair<Integer, Integer>(1600, 900));
+                add(new Pair<Integer, Integer>(1920, 1080));
+            }
+    };
+*/
 
     public static UUID urlToUUID(String url) {
         return UUID.nameUUIDFromBytes(url.getBytes());
@@ -59,10 +90,6 @@ public class MyUtil {
                 path = dir.substring(16); // append the rest of the dir name
             }
         }
-        else {
-            // what follows the hostname is not valid; return null
-            return null;
-        }
 
         if(dir.equals("storegooglecom")) {
             url = domain;
@@ -91,6 +118,9 @@ public class MyUtil {
             String temp = path.substring(8);
             path = "magazine/" + temp;
             url += path;
+        }
+        else if(dir.length() == 16 && dir.contains(potentialRegion)) {
+            // url is fine the way it is
         }
         else {
             // the url path is not valid; return null

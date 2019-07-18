@@ -112,5 +112,12 @@ public class UtilityTests {
 
         Assert.assertTrue(configTestCreatedUrl + " does not equal " + configTestUrl,
                 configTestUrl.equals(configTestCreatedUrl));
+
+        String homeUs = "storegooglecomus";
+        String homeUsURL = "https://store.google.com/us/";
+        String homeUsCreatedUrl = MyUtil.CreateURLFromWebpageDirName(homeUs);
+
+        Assert.assertTrue(homeUsCreatedUrl + " does not equal " + homeUsURL,
+                homeUsURL.equals(homeUsCreatedUrl));
     }
 }
