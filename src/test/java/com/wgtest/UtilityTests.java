@@ -89,4 +89,28 @@ public class UtilityTests {
         //result = MyUtil.CreateURLFromWebpageDirName(test_input);
         //Assert.assertFalse(result + " is not null for input " + test_input, result != null);
     }
+
+    @Test
+    public void CreateURLFromWebpageDirName_TestValidInput() {
+        String collectionOffers = "storegooglecomcollectionoffers";
+        String collectionOffersUrl = "https://store.google.com/collection/offers";
+        String collectionOffersCreatedUrl = MyUtil.CreateURLFromWebpageDirName(collectionOffers);
+
+        Assert.assertTrue(collectionOffersCreatedUrl + " does not equal " + collectionOffersUrl,
+                collectionOffersUrl.equals(collectionOffersCreatedUrl));
+
+        String magazineOffers = "storegooglecommagazineoffers";
+        String magazineOffersUrl = "https://store.google.com/magazine/offers";
+        String magazineOffersCreatedUrl = MyUtil.CreateURLFromWebpageDirName(magazineOffers);
+
+        Assert.assertTrue(magazineOffersCreatedUrl + " does not equal + " + magazineOffersUrl,
+                magazineOffersUrl.equals(magazineOffersCreatedUrl));
+
+        String configTest = "storegooglecomconfigtest";
+        String configTestUrl = "https://store.google.com/config/test";
+        String configTestCreatedUrl = MyUtil.CreateURLFromWebpageDirName(configTest);
+
+        Assert.assertTrue(configTestCreatedUrl + " does not equal " + configTestUrl,
+                configTestUrl.equals(configTestCreatedUrl));
+    }
 }
