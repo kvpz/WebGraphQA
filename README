@@ -1,17 +1,29 @@
-I need some help with logging and writing tests.
+# About the packages
 
-Tests should be implemented under src/main/java/com.wg/GoogleStoreTests.java
+What does WG stand for?  Web Graph.  Why? Because it is the best quip I could use to describe what I am working towards.
 
-src/main/java/com.wg
-This folder will contain all the functions and programs for testing the website.
+*src/main/java/com.wg**
+This folder will contain all the functions and programs for testing large portions of the website.  Tests here are considered
+generic.  If the test cannot be applied across different websites, then it should not go here.  There should not be
+any code that is written directly against a specific website.  As I write this sentence, the majority of the code is
+dedicated to the google store.  The goal is to make these tests compatible with different websites. Refactors will be
+accepted.
 
-/src/test/java/com.wgtest
-This folder will contain tests against the functions used to test the website.
+*/src/test/java/com.wgtest*
+This folder will contain unit tests against the functions written under com.wg.
 
+*/src/main/java/gstore*
+This folder is dedicated to gstore.  It is a revamp of what is currently found under com.wg.  The difference is that
+com.wg is a set of tests that can be run across various sets of data such as distinct groups of URLs or directories.  The
+code under gstore will focus on writing tests (specifically) against what is available, that is, Pages, Modules, Carousels, etc.
+Notice how Pages encapsulate modules, modules can encapsulate caorusels, and so on.  Right now I am writing
+tests that can be applied to various pages.  If there is a test that is specific and unique to one page, then a separate
+class should be written containing the test(s) for that page.  Tests should be written as specific to a page element as possible.
+Generally it would be a good idea to write tests for modules and not entire pages.
 
 ## Design
 This documentation was started after about 2 months writing tests against store.google.com.  Over this time period, I have expanded on the design a bit.
-The following will be a description of how I lead the design of this project.
+The following will be a description of how this project will be designed.
 
 I wrote separate classes with a main method focusing on performing tests related.
 
@@ -50,9 +62,14 @@ Helper functions:
         branch (until a sibling can be found).  The repeat the process of crawling down the sibling branch until another autorotating carousel is detected or there is nothing left to crawl.
         This can all be packed into a function that will return an array of the outer html of elements.
     2) Get all modules.  Modules are div elements with a class attribute with the value "page-module."  This can be found under the Modules class.
-    3)
 
 
 
 Similar projects for inspiration
 http://webgraph.di.unimi.it/
+
+README last updated 2019-07-19.
+Info about package gstore was added.
+Currently accepting refactors for package com.wg.  Please read description above for what is expected.
+If writing test cases for websites, please also include a unit test for the test under com.wgtest.
+Any questions, #ping me!
