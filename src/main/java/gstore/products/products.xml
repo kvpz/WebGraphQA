@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<products>
+    <product>
+        <name>Pixel 3</name>
+        <overview>/pixel_3</overview>
+        <category>phones</category>
+    </product>
+    <product>
+        <name>Pixel 3a</name>
+        <overview>/pixel_3a</overview>
+        <category>phones</category>
+    </product>
+    <product>
+        <name>Pixel 3 Case</name>
+        <overview>/pixel_3_case_fabric</overview>
+        <category>phones</category>
+    </product>
+    <product>
+        <name>Pixel 3a Case</name>
+        <overview>/pixel_3a_case_fabric</overview>
+        <category>phones</category>
+    </product>
+    <product>
+        <name>Nest Hub Max</name>
+        <overview>/google_nest_hub_max</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest Hub</name>
+        <overview>/google_nest_hub</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Home Max</name>
+        <overview>/google_home_max</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Home</name>
+        <overview>/google_home</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Home Mini</name>
+        <overview>/google_home_mini</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Chromecast Ultra</name>
+        <overview>/chromecast_ultra</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Chromecast</name>
+        <overview>/chromecast</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Wifi</name>
+        <overview>/google_wifi</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest x Yale Lock</name>
+        <overview>/nest_x_yale_lock</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest Hello</name>
+        <overview>/nest_hello_doorbell</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest Protect</name>
+        <overview>/nest_protect_2nd_gen</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest Secure Alarm</name>
+        <overview>/nest_secure_alarm_system</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest Cam IQ Indoor</name>
+        <overview>/nest_cam_iq</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest Cam Indoor</name>
+        <overview>/nest_cam_indoor</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest Cam IQ Outdoor</name>
+        <overview>/nest_cam_iq_outdoor</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest Cam Outdoor</name>
+        <overview>/nest_cam_outdoor</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest Aware</name>
+        <overview>/nest_aware</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest Learning Thermostat</name>
+        <overview>/nest_learning_thermostat</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest Thermostat E</name>
+        <overview>/nest_thermostat_e</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Nest Temperature Sensor</name>
+        <overview>/nest_temperature_sensor</overview>
+        <category>connected home</category>
+    </product>
+    <product>
+        <name>Stadia</name>
+        <overview>/stadia_founders_edition</overview>
+        <category>gaming</category>
+    </product>
+    <product>
+        <name>Pixel Slate</name>
+        <overview>/pixel_slate</overview>
+        <category>tablets</category>
+    </product>
+    <product>
+        <name>Pixelbook</name>
+        <overview>/google_pixelbook</overview>
+        <category>laptop</category>
+    </product>
+    <product>
+        <name>Clips</name>
+        <overview>/google_clips</overview>
+        <category>accessories</category>
+    </product>
+    <product>
+        <name>Daydream View</name>
+        <overview>/google_daydream_view</overview>
+        <category>accessories</category>
+    </product>
+    <product>
+        <name>Pixel Buds</name>
+        <overview>/google_pixel_buds</overview>
+        <category>accessories</category>
+    </product>
+    <product>
+        <name>Pixel Stand</name>
+        <overview>/pixel_stand</overview>
+        <category>accessories</category>
+    </product>
+    <product>
+        <name>Pixel Slate Keyboard</name>
+        <overview>/pixel_slate_keyboard</overview>
+        <category>accessories</category>
+    </product>
+    <product>
+        <name>Pixelbook Pen</name>
+        <overview>/google_pixelbook_pen</overview>
+        <category>accessories</category>
+    </product>
+    <product>
+        <name>Pixelbook Sleeve</name>
+        <overview>/google_pixelbook_sleeve</overview>
+        <category>accessories</category>
+    </product>
+    <product>
+        <name>Pixel USB-C earbuds</name>
+        <overview>/usb_c_earbuds</overview>
+        <category>accessories</category>
+    </product>
+</products>
