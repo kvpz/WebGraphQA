@@ -21,15 +21,31 @@ tests that can be applied to various pages.  If there is a test that is specific
 class should be written containing the test(s) for that page.  Tests should be written as specific to a page element as possible.
 Generally it would be a good idea to write tests for modules and not entire pages.
 
+### class DiffMachine
+This class was originally created with the purpose of finding differences across each of the pages for a region from
+different dates.  For example, I want to check if there are any differences on the Nest Hub page from last week and
+today.
+I'm thinking about making this a program.  Differences that can be found across 2 pages or modules should be applied
+to a respected diff class, PageDiff or ModuleDiff.
+
+### class PageDiff
+Contains methods that can find differences between two pages.  Please avoid writing tests that step into Module territory.
+Contains a method to check if two pages have the same amount of modules.
+Contains a method to generate reports about the diff results.
+Diffs can be found between two completely different pages, or pages that are under different URLs.
+
 ## Design
 This documentation was started after about 2 months writing tests against store.google.com.  Over this time period, I have expanded on the design a bit.
 The following will be a description of how this project will be designed.
 
-I wrote separate classes with a main method focusing on performing tests related.
+Below are
 
-The following tests performed:
+#### Accessibility
 Check for aria label values.  There is a test that will get all the values for aria label across the entire website and print them out.  I would then read them
-checking:
+checking for inappropriate characters.
+
+
+#### Content
 
 Tests performed on copy:
     1) localization.  All the text that would be displayed in viewports is printed and manually analyzed.
@@ -46,7 +62,15 @@ Tests performed on copy:
         Note: these pages must be analyzed under UTF-8 encoding. This must be declared when using JSoup's parse function which takes an argument
             asking the character encoding of the HTML document.
 
-Tests performed on UI/ UX:
+#### Internationalization
+    Differential testing is very important.  Various tests can be applied for a single product page across multiple regions.
+    It's very important to test if there is a difference between the module amount and IDs of the current version of a webpage and the last version downloaded.
+    1) does page from a region differ from an older version of the page (True/ False)
+    2) does a page's module count differ from an older version of the page (True/ False)
+    3) does a specific module's (look up by id) copy differ from an older version
+    4)
+
+#### UI
     1) Check for disappearing nav bar. There is a nav bar on the PDPs that would disappear after scrolling down the page
        and resizing the viewport.  It would reappear after scrolling back to the top and resizing the browser.  As of 07/05/2019, this is still an issue.
     2) link analysis.  Pages should always have a link.  All links should link to a valid page (not a 404 or redirect, which may signal as a 500 error)
@@ -54,7 +78,8 @@ Tests performed on UI/ UX:
         scrolling up and down a page rapidly a few times.  A page that was victim of such a carousel is the Overview PDP for the Google Nest Learning Thermostat.
     4)
 
-Helper functions:
+
+## Test functions:
     1) TODO: Auto-rotating carousel detection: be able to identify whether an element contains a carousel/ slideshow.  A method could be written that will return a signal if an element has undergone changes, or values
         have been updated.  I could start by the body HTML element, and every time a change is detected, I would proceed to the next child element.  This process can be continued
         until a change occurs in the currently selected outer html (the value for one of the tag's attributes would have to be changed).  Once one of these elements are detected (after a
@@ -63,7 +88,12 @@ Helper functions:
         This can all be packed into a function that will return an array of the outer html of elements.
     2) Get all modules.  Modules are div elements with a class attribute with the value "page-module."  This can be found under the Modules class.
 
-
+### Differential Testing
+To determine if a page should be tested, I am checking portions of the page for updates.  The diff machine checks if any of the modules have been updated.  The page modules
+contain all of the UI content including the global nav bar and the footer.  These module elements can be identified by the style class 'page-module'.  Nonces are applied to some of these
+modules.  page modules that contain nonces which would create a false positive in a diff test have no value assigned to the id attribute.  That is why the diff machine is not performing
+a diff on page modules that do not have an assigned id. Another id that changes per every request is the id value assigned to the "Need product advice" module which can be found
+on the homepage.  Every other modules exerts no difference other than this module, just because of the id value.
 
 Similar projects for inspiration
 http://webgraph.di.unimi.it/
@@ -73,3 +103,19 @@ Info about package gstore was added.
 Currently accepting refactors for package com.wg.  Please read description above for what is expected.
 If writing test cases for websites, please also include a unit test for the test under com.wgtest.
 Any questions, #ping me!
+
+
+
+framework
+page object model
+
+Framework folders
+TestCase = test cases
+Responsitory == configuration files
+testData = excel
+library = jars
+driver = web drivers
+
+consider creating Selenium By objects in the webpage class in order to be able to find commonly occurring elements quickly.
+I can write a By object that will always find the module elements on a page.
+I will have to write a test to check if the
