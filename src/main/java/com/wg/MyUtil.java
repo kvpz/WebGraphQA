@@ -43,6 +43,20 @@ public class MyUtil {
             }
     };
 */
+    public static class Timer {
+        public Timer() {
+            start = new Date();
+        }
+
+        public void End() {
+            end = new Date();
+
+            System.out.println((end.getTime() - start.getTime()) / 1000f + " seconds");
+        }
+
+        private Date start;
+        private Date end;
+    }
 
     public static UUID urlToUUID(String url) {
         return UUID.nameUUIDFromBytes(url.getBytes());
@@ -82,8 +96,8 @@ public class MyUtil {
 
         if(WebPage.GetAllRegionCodes().keySet().contains(potentialRegion)) {
             // handle Puerto Rico region code and "product" conflict
-            // handle Canada region code and "category" conflict
             if(potentialRegion.equals("pr") && dir.length() > 16 && dir.charAt(16) == 'o') { } // not a region code
+            // handle Canada region code and "category" conflict
             else if(potentialRegion.equals("ca") && dir.length() > 16 && dir.charAt(16) == 't') {}
             else {
                 url += potentialRegion + "/";
@@ -109,7 +123,7 @@ public class MyUtil {
             path = "config/" + temp;
             url += path;
         }
-        else if(dir.contains(potentialRegion + "product")) {
+        else if(dir.contains("product")) {
             String temp = path.substring(7);
             path = "product/" + temp;
             url += path;
@@ -158,17 +172,6 @@ public class MyUtil {
         return f;
     }
 
-
-    /**
-     * Get the url of the page linked to when the transaction button is pressed.
-     * The transaction button can be found on the Overview page for a product. This function will return a single
-     * URL. There should be two links on the page, one for mobile and one for desktop view.  If there is more or less
-     * than 2 links, then an exception will be thrown, and an empty string will be returned.
-     */
-    public static String GetTransactionButtonURL(String html) {
-        return new String();
-    }
-
     /**
      *
      * @param path absolute path to a file directory
@@ -197,10 +200,10 @@ public class MyUtil {
      */
     public static FirefoxDriver CreateFFDriver() {
         FirefoxBinary firefoxBinary = new FirefoxBinary();
-        //firefoxBinary.addCommandLineOptions("--headless");
-        firefoxBinary.addCommandLineOptions("--load-images=no");
+        firefoxBinary.addCommandLineOptions("--headless");
+        //firefoxBinary.addCommandLineOptions("--load-images=no");
         FirefoxProfile firefoxProfile = new FirefoxProfile();
-        firefoxProfile.setPreference("permissions.default.image", 2);
+        //firefoxProfile.setPreference("permissions.default.image", 2);
         FirefoxOptions firefoxOptions = new FirefoxOptions();
         firefoxOptions.setBinary(firefoxBinary);
         firefoxOptions.setProfile(firefoxProfile);
