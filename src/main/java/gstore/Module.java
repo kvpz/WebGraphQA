@@ -51,7 +51,7 @@ public class Module implements Comparator<Module>, Comparable<Module> {
         Elements imgElements = element.getElementsByTag("img");
         for(Element imgElement : imgElements) {
             String url = imgElement.attr("src");
-            if(url.substring(0,1).equals("//")) {
+            if(!url.isEmpty() && url.substring(0,1).equals("//")) {
                 url = "https:" + url;
             }
             imageUrls.add(url);
@@ -63,15 +63,23 @@ public class Module implements Comparator<Module>, Comparable<Module> {
             if(!styleVal.contains("url"))
                 continue;
 
-            String url = styleVal.substring( styleVal.indexOf("http"), styleVal.indexOf("\")") );
-            System.out.println("url in style:  " + url);
-            imageUrls.add(url);
+            String url = null;
+            if(styleVal.contains("http")) {
+                url = styleVal.substring(styleVal.indexOf("http"), styleVal.indexOf(")"));
+                if(url.endsWith("\""))
+                    url = url.substring(0, url.length() - 1);
+                imageUrls.add(url);
+            }
+            else {
+                url = styleVal.substring(styleVal.indexOf("//"), styleVal.indexOf(")"));
+                imageUrls.add("https:" + url);
+            }
         }
 
         Elements elsLazyImage = element.getElementsByAttribute("mqn-lazyimage-background-src");
         for(Element el : elsLazyImage) {
             String url = el.attr("mqn-lazyimage-background-src");
-            if(url.substring(0,1).equals("//")) {
+            if(!url.isEmpty() && url.substring(0,1).equals("//")) {
                 url = "https:" + url;
             }
             imageUrls.add(url);
@@ -132,5 +140,14 @@ public class Module implements Comparator<Module>, Comparable<Module> {
 
     public String getHtml() {
         return element.html();
+    }
+
+    public boolean hasCarousel() {
+        hasCarousel = false;
+        if(element.html().contains("carousel")) {
+            hasCarousel = true;
+        }
+
+        return hasCarousel;
     }
 }
