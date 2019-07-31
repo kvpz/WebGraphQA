@@ -5,6 +5,7 @@ import com.wg.WebGraphFile;
 import com.wg.WebPage;
 import org.apache.commons.cli.*;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -13,8 +14,16 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * Default usage of this program will download all the pages currently in the WebGraph directory.  The WebGraph
+ * directory contains almost all pages that have ever been encountered in GStore since Spring season.  Because of
+ * that, there are requests for pages that will receive a redirect response.
+ *
  * Download pages from a region
  * Download pages into an already existing WebGraph directory (overwriting)
+ *
+ * Future plans:
+ * Add a flag that for preventing the download of pages that are currently deprecated, i.e. URLs requests that will
+ * receive a 301 response.  This will help speed up tests.
  */
 public final class DownloadPages {
 
@@ -22,6 +31,16 @@ public final class DownloadPages {
     private static final String latestWebGraphDir = "WebGraph_" + Utility.dateUnderscored();
     private static Options cliOptions;
     private static boolean verbose = false;
+
+    // CLI flag argument values
+    static String region;
+    static String overwrite;
+    static String downloadUrl;
+    static String batchDownload;
+
+    static CommandLineParser cliParser = new DefaultParser();
+    static HelpFormatter cliFormatter = new HelpFormatter();
+    static CommandLine cmd = null;
 
     /**
      * Download a page if it does not already exist.
@@ -126,16 +145,25 @@ public final class DownloadPages {
     }
 
     /**
-     * Check if the flags provided via CLI are valid
+     * Check if the flags provided via CLI are valid.  If they are not, the program should be aborted.
      * @return true if flag values are valid, else false
      */
-    private static boolean verifyCLIFlags() {
-        boolean result = true;
+    private static void verifyCLIFlags() {
+        // check if region flag value is valid
+        if(region != null && !verifyRegionArgVal(region)) {
+            System.exit(0);
+        }
 
-        return result;
+        // check if url flag value is valid
+        if(downloadUrl != null && !verifyDownloadURLArgVal(downloadUrl)) {
+            System.exit(0);
+        }
     }
 
-    private static void setupCLIFlags() {
+    /**
+     * Create all the flags that will be accepted by the program via CLI.
+     */
+    private static void setupCLIOptions() {
         cliOptions = new Options();
 
         Option overwriteFlag = new Option("o","overwrite", false, "overwrite stored html (default)");
@@ -149,15 +177,20 @@ public final class DownloadPages {
         Option urlFlag = new Option("u", "url", true, "page to download");
         urlFlag.setRequired(false);
         cliOptions.addOption(urlFlag);
+
+        Option batchFlag = new Option("b", "batchDownloadList", true, "a file containing all the URLs to be " +
+                "downloaded");
+        batchFlag.setRequired(false);
+        cliOptions.addOption(batchFlag);
+
+        // TODO: create a flag containing the directory where all the pages will be downloaded to instead of the latest
     }
 
-    public static void main(String... args) {
-        setupCLIFlags();
-
-        CommandLineParser cliParser = new DefaultParser();
-        HelpFormatter cliFormatter = new HelpFormatter();
-        CommandLine cmd = null;
-
+    /**
+     * Parse cli options and store flag values as member data.
+     * @param args
+     */
+    private static void parseCLIOptions(String[] args) {
         try {
             cmd = cliParser.parse(cliOptions, args);
         }
@@ -169,28 +202,28 @@ public final class DownloadPages {
         }
 
         // get cli flag values
-        String overwrite = cmd.getOptionValue("overwrite");
-        String region = cmd.getOptionValue("region");
-        String downloadUrl = cmd.getOptionValue("url");
+        overwrite = cmd.getOptionValue("overwrite");
+        region = cmd.getOptionValue("region");
+        downloadUrl = cmd.getOptionValue("url");
+        batchDownload = cmd.getOptionValue("batchDownloadList");
+    }
 
-        // check if region flag value is valid
-        if(region != null && !verifyRegionArgVal(region)) {
-            System.exit(0);
-        }
+    public static void main(String... args) {
 
-        // check if url flag value is valid
-        if(downloadUrl != null && !verifyDownloadURLArgVal(downloadUrl)) {
-            System.exit(0);
-        }
+        setupCLIOptions();
+        parseCLIOptions(args);
+
+        // Perform checks that should abort the program
+        verifyCLIFlags();
 
         // do stuff if only region argument is passed (download all pages from previous webgraph)
         if(region != null && downloadUrl == null) {
 
-            // create the latest WebGraph
-            File webGraphDir = new File(latestWebGraphDir);
+            // get the latest WebGraph directory
+            File webGraphDir = new File("WebGraph_2019_7_30"); //latestWebGraphDir);
             boolean created = webGraphDir.mkdir();
             if(!created) {
-               System.out.println(webGraphDir.getName() + " was not created (likely because it already exists).m ");
+               System.out.println(webGraphDir.getName() + " was not created (likely because it already exists)");
             }
 
             // create a directory under the WebGraph directory for the region
@@ -199,6 +232,11 @@ public final class DownloadPages {
             if(!regionDirCreated) {
                 System.out.println(webGraphRegionDir + " was not created (likely because it already exists)");
             }
+
+            // prevent writing logs to console
+            System.setProperty(FirefoxDriver.SystemProperty.DRIVER_USE_MARIONETTE, "true");
+            System.setProperty(FirefoxDriver.SystemProperty.BROWSER_LOGFILE,
+                    "geckologs_" + Utility.dateUnderscored() + "_" + region + ".txt");
 
             downloadFromRegion(region, webGraphRegionDir);
         }
