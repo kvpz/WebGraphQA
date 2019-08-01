@@ -136,6 +136,7 @@ public class MyUtil {
         else if(dir.length() == 16 && dir.contains(potentialRegion)) {
             // url is fine the way it is
         }
+        else if(dir.substring(16,18).equals("hl") && dir.contains(potentialRegion)){}
         else {
             // the url path is not valid; return null
             return null;
@@ -146,6 +147,12 @@ public class MyUtil {
             url = url.substring(0, url.length() - 6);
             url += "?hl=" + path.substring(path.length() - 4, path.length() - 2);
             url += "-" + path.substring(path.length() - 2);
+        }
+
+        // add host language query string if
+        else if(path.length() == 6) {
+            url += "?hl=" + path.substring(2,4) + "-" + path.substring(4,6);
+
         }
 
         return url;
