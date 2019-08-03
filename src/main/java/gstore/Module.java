@@ -42,12 +42,13 @@ public class Module implements Comparator<Module>, Comparable<Module> {
     }
 
     /**
-     * Get all the URLs pointing to images.
+     * Get all the URLs for image assets and store them in List data member.
      * Image types: png, jpeg, webm
      *
      */
     private void initializeImageUrls() {
         imageUrls = new ArrayList<>();
+
         Elements imgElements = element.getElementsByTag("img");
         for(Element imgElement : imgElements) {
             String url = imgElement.attr("src");
@@ -58,21 +59,33 @@ public class Module implements Comparator<Module>, Comparable<Module> {
         }
 
         Elements elsWithStyleAttr = element.getElementsByAttribute("style");
-        for(Element elWithStyl : elsWithStyleAttr) {
-            String styleVal = elWithStyl.attr("style");
-            if(!styleVal.contains("url"))
+        for(Element elementWithStyle : elsWithStyleAttr) {
+            String styleVal = elementWithStyle.attr("style");
+            if(!styleVal.contains("url")) {
                 continue;
+            }
 
-            String url = null;
+            String url = new String();
             if(styleVal.contains("http")) {
-                url = styleVal.substring(styleVal.indexOf("http"), styleVal.indexOf(")"));
+                // extract the url from the attribute
+                int urlStartIndex = styleVal.indexOf("http");
+                int urlEndIndex = styleVal.substring(urlStartIndex).indexOf(")");
+                url = styleVal.substring(urlStartIndex, urlEndIndex);
                 if(url.endsWith("\""))
                     url = url.substring(0, url.length() - 1);
                 imageUrls.add(url);
             }
             else {
-                url = styleVal.substring(styleVal.indexOf("//"), styleVal.indexOf(")"));
-                imageUrls.add("https:" + url);
+                int indexOfBackslash = styleVal.indexOf("//");
+                if(indexOfBackslash < 0) {
+                    // There is no http or protocol relative url, thus there is an error
+                    System.out.println("ERROR (" + indexOfBackslash + "): style background image: " + styleVal);
+                    url = new String();
+                }
+                else {
+                    url = styleVal.substring(indexOfBackslash, styleVal.indexOf(")"));
+                    imageUrls.add("https:" + url);
+                }
             }
         }
 
