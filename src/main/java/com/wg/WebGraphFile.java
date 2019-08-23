@@ -15,6 +15,8 @@ import java.nio.file.Paths;
 import java.util.*;
 
 /**
+    Learn about your website using this class.
+
     This class manages reading and writing Graph data to and from files. Think of it like a database.
 
     The file format for a web graph is ParentDir > PageDir > {PageSource, PageDataFile[*]}
@@ -30,20 +32,19 @@ import java.util.*;
  */
 public class WebGraphFile {
 
-    private static final String WEBDOMAIN= "store.google.com";
-    private static final String WEBGRAPHFILE_PATH = "WebGraph" + File.separator; // the location where scraped data is stored
+    private static final String WEBDOMAIN = "store.google.com";
+    private static String WEBGRAPHFILE_PATH = "WebGraph" + File.separator; // the location where scraped data is stored
     private String webPageDirPath;
     private String sourceFilePath;
     private String textFilePath;
 
+    private File file;
+
+    private boolean verbose = true;
 
     public WebGraphFile() {
-        webPageDirPath = sourceFilePath  = null;
+        webPageDirPath = sourceFilePath = null;
 
-    }
-
-    public static String GetWebsiteDomain() {
-        return WEBDOMAIN;
     }
 
     /**
@@ -55,20 +56,14 @@ public class WebGraphFile {
         textFilePath = webPageDirPath + "text.txt";
     }
 
-    /**
-        Return a File array representing all the region directories.
-     */
-    public static File[] GetRegionDirectories() {
-        File[] dirs = null;
+    public WebGraphFile(WebGraph wg, File file) {
+        WEBGRAPHFILE_PATH = wg.getWebGraphFile().getPath();
+        //webPageDirPath = wg.getWebGraphFile() + File.separator +
+        this.file = file;
+    }
 
-        try {
-
-        }
-        catch(Exception e) {
-
-        }
-
-        return dirs;
+    public File getFile() {
+        return file;
     }
 
 
@@ -134,7 +129,12 @@ public class WebGraphFile {
                 if (page.getName().contains("DS_Store"))
                     continue;
 
-                Document html = Jsoup.parse(new File(page + "/source.html"), "utf-8");
+                File pageSource = new File(page + File.separator + "source.html");
+                if(!pageSource.exists()) {
+                    continue;
+                }
+
+                Document html = Jsoup.parse(pageSource, "utf-8");
                 Elements hrefs = html.getElementsByAttribute("href");
 
                 // iterate through pages href tags
@@ -146,7 +146,9 @@ public class WebGraphFile {
                             hrefValue.length() > 1 && hrefValue.charAt(0) == '/' &&
                             (page.getName().contains(region + "config") ||
                                     page.getName().contains(region+"product") ||
-                                    page.getName().contains(region+"magazine"))) {
+                                    page.getName().contains(region+"magazine") ||
+                                    page.getName().contains(region+"category") ||
+                                    page.getName().contains(region+"collection"))) {
 
                         if(!map.containsKey(hrefValue)) {
                             HashSet<String> newPageSet = new HashSet<>();
@@ -196,7 +198,24 @@ public class WebGraphFile {
         if(!WebPage.GetAllRegionCodes().containsKey(region))
             return new ArrayList<File>();
 
-        ArrayList<File> files = new ArrayList<File>(Arrays.asList(new File("WebGraph/" + region).listFiles()));
+        File regionFile = new File(WEBGRAPHFILE_PATH + region);
+        if(!regionFile.exists()) {
+            System.out.println("Region " + region + " directory does not exist");
+            return new ArrayList<File>();
+        }
+
+        ArrayList<File> files = new ArrayList<File>(Arrays.asList(regionFile.listFiles()));
+        files.removeIf(d -> d.getName().contains("DS_Store"));
+        Collections.sort(files);
+        return files;
+    }
+
+    public static ArrayList<File> GetAllDirsFromRegion(String region, File webGraphDir) {
+        // check if region argument is valid
+        if(!WebPage.GetAllRegionCodes().containsKey(region))
+            return new ArrayList<File>();
+
+        ArrayList<File> files = new ArrayList<File>(Arrays.asList(new File(webGraphDir + File.separator + region).listFiles()));
         files.removeIf(d -> d.getName().contains("DS_Store"));
         Collections.sort(files);
         return files;
@@ -244,23 +263,6 @@ public class WebGraphFile {
     }
 
     /**
-     Get the URLs generated from the folder names in WebGraph that contain product, collection, and category in the name.
-     This returns a sorted array list. It is assumed that the directory WebGraph is populated.
-     */
-    public static ArrayList<String> GetUrlsFromFileNames() {
-        File[] files = WebGraphFile.GetWebPagesDirectories();
-        ArrayList<String> urls = new ArrayList<String>();
-        for(int f = 0; f < files.length; ++f) {
-            String pageUrl = MyUtil.CreateURLFromWebpageDirName(files[f].getName());
-            if(pageUrl != null && (pageUrl.contains("product") || pageUrl.contains("collection") || pageUrl.contains("category")))
-                urls.add(pageUrl);
-        }
-        Collections.sort(urls);
-
-        return (urls);
-    }
-
-    /**
      Find webpages that have the same module (id)
      */
     public static List<String> GetPagesWithModuleId(String id) {
@@ -277,29 +279,11 @@ public class WebGraphFile {
     }
 
     /**
-     Get the pixel 3 overview page source for all regions.
-
-     While getting the overview pages, also get the links for the other subpages.
-     If the file exists locally, open the file instead of requesting the page with web driver.
-     */
-    public static HashMap<String, File> GetPixel3PagesOverviews() {
-        HashMap<String, File> pixel3Overviews = new HashMap<>();
-        HashMap<String, File> pixel3pages = GetPageDir("pixel_3");
-        pixel3pages.forEach((k,v) -> {
-            File pageDir = new File("WebGraph/" + k + "/storegooglecompixel_3");
-            if(v.getName().matches(pageDir.getName()))
-                pixel3Overviews.put(k, new File(pageDir + "/source.html"));
-        });
-
-        return pixel3pages;
-    }
-
-    /**
      Get the page directories in a specific region that match the name given. Returns null if directory not found.
      This function is case sensitive, Pixel will not match directories with pixel(lowercase) within.
      */
     public static List<File> GetPageDir(String product, String region) {
-        File regionPages = new File("WebGraph/" + region);
+        File regionPages = new File(WEBGRAPHFILE_PATH + region);
         if(!regionPages.exists())
             return null;
 
@@ -319,7 +303,7 @@ public class WebGraphFile {
      */
     public static HashMap<String, File> GetPageDir(String product) {
         HashMap<String, File> pages = new HashMap<>();
-        ArrayList<File> regions = new ArrayList<>(Arrays.asList(new File("WebGraph/").listFiles()));
+        ArrayList<File> regions = new ArrayList<>(Arrays.asList(new File(WEBGRAPHFILE_PATH).listFiles()));
         for(File region : regions) {
             if(region.listFiles() == null) continue; // no files, continue to next region
             ArrayList<File> regionDirs = new ArrayList<>(Arrays.asList(region.listFiles()));
@@ -333,29 +317,8 @@ public class WebGraphFile {
         return pages;
     }
 
-    /**
-     Get all the text for the Pixel 3 pages (prints to output stream)
-     */
-    public static void GetPixel3Text() {
-
-        // Get all the text for the pixel 3 pages
-        HashMap<String, File> pixel3Pages = GetPageDir("pixel_3");
-        for(Map.Entry<String, File> f : pixel3Pages.entrySet()) {
-            File sourceFile = new File(f.getValue().getPath() + "/source.html");
-            try {
-                Document sourceDoc = Jsoup.parse(sourceFile, "utf-8");
-
-                sourceDoc.getElementsByTag("href");
-
-            }
-            catch(Exception e) {
-                System.out.println(e);
-            }
-        }
-    }
-
     public static ArrayList<File> GetConfigPages(String region) {
-        ArrayList<File> configs = new ArrayList<>(Arrays.asList((new File("WebGraph/" + region)).listFiles()));
+        ArrayList<File> configs = new ArrayList<>(Arrays.asList((new File(WEBGRAPHFILE_PATH + region)).listFiles()));
         Collections.sort(configs);
 
         configs.removeIf(d -> !d.getName().contains("storegooglecom" + region + "config"));
@@ -375,18 +338,18 @@ public class WebGraphFile {
     }
 
     /**
-        This function relies on the dir names under WebGraph/us. Returns the name of this dir.
+        This function relies on the dir names under WebGraph/us.
      */
     public static ArrayList<File> GetProductsPages(String region) {
-        ArrayList<File> products = new ArrayList<>(Arrays.asList((new File("WebGraph/" + region)).listFiles()));
+        ArrayList<File> products = new ArrayList<>(Arrays.asList((new File(WEBGRAPHFILE_PATH + region)).listFiles()));
 
         String filenameExpTemp = "storegooglecom" + region + "product";
 
-        // remove dash from en-hk, fr-be, fr-ca, fr-ch
-        if(region.contains("-")) {
-            String country = region.substring(3, 5);
-            filenameExpTemp = "storegooglecom" + country + "product";
-        }
+        // extract country from zh-hk, fr-be, fr-ca, fr-ch
+        //if(region.contains("-")) {
+        //    String country = region.substring(3, 5);
+        //    filenameExpTemp = "storegooglecom" + country + "product";
+        //}
 
         String filenameExp = filenameExpTemp;
 
@@ -395,7 +358,6 @@ public class WebGraphFile {
 
         Comparator c = Collections.reverseOrder();
         products.sort(c);
-        //products.sort
 
         return products;
     }
@@ -406,13 +368,31 @@ public class WebGraphFile {
      */
     public static ArrayList<File> GetProductPages() {
         ArrayList<File> productPages = new ArrayList<>();
-        TreeSet<String> regions = new TreeSet<>(WebPage.GetAllRegionCodes().keySet());
+        TreeSet<String> regions = new TreeSet<>(WebPage.GetAllRegionCodes().keySet()); // sorted
 
-        for(String region : regions) {//WebPage.GetAllRegionCodes().keySet()){
+        for(String region : regions) {
             productPages.addAll(GetProductsPages(region));
         }
 
         return productPages;
+    }
+
+    /**
+     * Return a product page as a JSoup Document object.
+     * @param file
+     * @return
+     */
+    public static Document GetProductPage(File file) {
+        Document doc = null;
+
+        try {
+            doc = Jsoup.parse(file, "utf-8");
+        }
+        catch(IOException e) {
+            System.out.println(e);
+        }
+
+        return doc;
     }
 
     /**
@@ -515,6 +495,38 @@ public class WebGraphFile {
     }
 
     /**
+     *  Get all the element containing the transaction button from the PDP.
+     *  Looking for a button element with a class attribute with value "button primary transaction"
+     */
+    public static Elements GetTransactionButtons(Document pdp) {
+        Elements buttons = pdp.getElementsByClass("transaction");
+
+        return buttons;
+    }
+
+    public static Element GetTransactionButton(Elements buttons) {
+        // if there is more than 2, return null
+        if(buttons.size() > 2) {
+            System.out.println("There are more than 2 transaction buttons");
+            return null;
+        }
+
+        // if there is less than 2, return null
+        if(buttons.size() < 2) {
+            System.out.println("There are less than 2 transaction buttons");
+            return null;
+        }
+
+        // if the buttons differ, return null
+        if(!buttons.first().equals(buttons.last())) {
+            System.out.println("The transaction buttons differ");
+            return null;
+        }
+
+        return buttons.first();
+    }
+
+    /**
      * Get all the pages that contain tech specs. The tech specs can sometimes be found under product overview page.
      * @return
      */
@@ -559,46 +571,49 @@ public class WebGraphFile {
         return techSpecFiles;
     }
 
-    /**
-        Get the footer content for all pages within the region.
-        Returns a hashmap with keys representing pages nd values representing the footers.
-     *
-    public static HashMap<String, String> GetFooters(String region) {
-        HashMap<String, >
+    public static void makeDirectoriesFromSitemap() {
+
     }
-    */
+
     /**
-        Persist graph data to a file. This function will overwrite a file if it exists by default.
+     * Persist graph data to a file. This function will overwrite a file if it exists by default.
      */
      public void WriteWebPageToFile(WebPage webPage) {
+         if(webPage.GetPageSource().isEmpty()){
+             System.out.println("WebPage object does not have page source. Abort writing to source.html");
+             return;
+         }
 
-        try {
-            System.out.println("Trying to write for: " + webPage.GetUrl() + " at " + sourceFilePath);
-            File pageFile = new File(webPageDirPath);
-            if(!pageFile.mkdir())
-                System.out.println(pageFile + " was not created");
+         webPageDirPath = WEBGRAPHFILE_PATH + webPage.GetRegion() + File.separator + webPage.GetId() + File.separator;
+         sourceFilePath = webPageDirPath + "source.html";
 
-            File sourceFile = new File(sourceFilePath);
+         try {
+             System.out.println("Trying to write: " + webPage.GetUrl() + " to " + sourceFilePath);
+             File pageDir = new File(webPageDirPath);
+             if(!pageDir.mkdir())
+                System.out.println(pageDir + " was not created");
 
-            if(!sourceFile.exists()) {
-                System.out.println(sourceFile  + " does not exist");
-                boolean created = sourceFile.createNewFile();
-                System.out.println("created: " + Boolean.toString(created));
-            }
-            else
-                Files.deleteIfExists(Paths.get(sourceFilePath));
+             File sourceFile = new File(sourceFilePath);
 
-            FileWriter pageSourceOut = new FileWriter(sourceFile, false);
+             if(!sourceFile.exists()) {
+                 System.out.println(sourceFile  + " does not exist");
+                 boolean created = sourceFile.createNewFile();
+                 System.out.println("created: " + Boolean.toString(created));
+             }
+             else
+                 Files.deleteIfExists(Paths.get(sourceFilePath));
 
-            pageSourceOut.write(webPage.GetPageSource());
+             FileWriter pageSourceOut = new FileWriter(sourceFile, false);
 
-            pageSourceOut.close();
+             pageSourceOut.write(webPage.GetPageSource());
 
-        }
-        catch(Exception e) {
-            System.out.println("Exception in WriteWebPageToFile(WebPage)\n" + e);
-            System.out.println(e.getStackTrace());
-        }
+             pageSourceOut.close();
+
+         }
+         catch(Exception e) {
+             System.out.println("Exception in WriteWebPageToFile(WebPage)\n" + e);
+             System.out.println(e.getStackTrace());
+         }
 
     }
 
@@ -606,6 +621,7 @@ public class WebGraphFile {
          try {
              File pageFile = new File(WEBGRAPHFILE_PATH + region + File.separator + webPageDirPath);
              pageFile.mkdir();
+
              File pageSourceFile = new File(sourceFilePath);
              pageSourceFile.createNewFile();
              FileWriter pageSourceOut = new FileWriter(pageSourceFile);
@@ -617,6 +633,25 @@ public class WebGraphFile {
          catch(Exception e) {
             System.out.println(e);
             System.out.println(e.getStackTrace());
+         }
+    }
+
+    public void WriteWebPageToFile(WebPage webPage, File regionDir) {
+         try {
+             File pageFile = new File(regionDir + File.separator + webPage.GetId());
+             pageFile.mkdir();
+
+             sourceFilePath = pageFile + "/source.html";
+             File pageSourceFile = new File(sourceFilePath);
+             pageSourceFile.createNewFile();
+             FileWriter pageSourceOut = new FileWriter(pageSourceFile);
+             pageSourceOut.write(webPage.GetPageSource());
+
+             System.out.println("writing to " + sourceFilePath);
+             pageSourceOut.close();
+         }
+         catch(Exception e) {
+             System.out.println(e);
          }
     }
 
@@ -637,4 +672,6 @@ public class WebGraphFile {
              System.out.println(e);
          }
     }
+
+
 }
