@@ -20,7 +20,6 @@ public class WebPage {
             put("ch", "german");
             put("de", "german");
             put("dk", "danish");
-            put("en-hk", "english");
             put("es", "spanish");
             put("fi", "finnish");
             put("fr", "french");
@@ -28,7 +27,7 @@ public class WebPage {
             put("fr-ca", "french");
             put("fr-ch", "french");
             put("gb", "english");
-            put("hk", "chinese");
+            put("hk", "english");
             put("id", "indonesian");
             put("ie", "english");
             put("in", "english");
@@ -48,6 +47,7 @@ public class WebPage {
             put("th", "thai");
             put("tw", "chinese");
             put("us", "english");
+            put("zh-hk", "chinese");
         }
     };
 
@@ -100,6 +100,7 @@ public class WebPage {
         modules = new HashMap<String, String>();
 
         this.region = ExtractRegion();
+        this.pageSource = new String();
     }
 
     /******************
@@ -125,7 +126,7 @@ public class WebPage {
         pageSource = source;
     }
 
-    //public void SetPageSourcePath(String path) {     sourceFilePath = path;   }
+    public void SetPageSourcePath(String path) { sourceFilePath = path; }
 
     public void SetVisited() {
         visited = true;
@@ -158,6 +159,7 @@ public class WebPage {
     }
 
     public void SetRegion(String region) { this.region = region; }
+
     /*************
         Accessors
      *************/
@@ -271,11 +273,12 @@ public class WebPage {
     private String ExtractRegion() {
         String region;
 
+        // extract the last four characters at the end of the id formed from the URL
         String localizationSuffix = id.substring(id.length()-4);
         if(localizationSuffix.equals("frca"))
             region = "fr-ca";
-        else if(localizationSuffix.equals("befr"))
-            region = "be-fr";
+        else if(localizationSuffix.equals("frbe"))
+            region = "fr-be";
         else if(localizationSuffix.equals("frch"))
             region = "fr-ch";
         else if(localizationSuffix.equals("enhk"))
@@ -284,6 +287,7 @@ public class WebPage {
             region = "us";
         }
         else {
+            // extract the two characters after "storegooglecom"
             String potentialRegion = id.substring(14, 16);
             if(regions.containsKey(potentialRegion) &&
                     !((id.length() > 20 && id.substring(14, 21).equals("product")) ||
@@ -302,15 +306,15 @@ public class WebPage {
         This function is called in the WebPage constructor.
         Currently it is designed to handle store.google.com domain.
 
-        Examples:
+        Example removing unnecessary host language query:
         https://store.google.com/th/?hl=th-TH -> https://store.google.com/th/
 
      */
     private String CleanUrl(String url) {
-        int HLQStrLength = 9; // = (new String("?hl=fr-CA")).length()
+        int HLQStrLength = 9; // maximum potential length of host language query string
         String urlSuffix = url.substring(url.length() - HLQStrLength); // no out of bounds error since minimum length is way beyond 9
-        if(urlSuffix.contains("hl=") && !urlSuffix.contains("fr-CA") && !urlSuffix.contains("be-FR") &&
-                !urlSuffix.contains("fr-CH") && !urlSuffix.contains("en-HK") && !urlSuffix.contains("fr-ca") && !urlSuffix.contains("be-fr") &&
+        if(urlSuffix.contains("hl=") && !urlSuffix.contains("fr-CA") && !urlSuffix.contains("fr-BE") &&
+                !urlSuffix.contains("fr-CH") && !urlSuffix.contains("en-HK") && !urlSuffix.contains("fr-ca") && !urlSuffix.contains("fr-be") &&
                 !urlSuffix.contains("fr-ch") && !urlSuffix.contains("en-hk")) {
 
             url = url.substring(0, url.length() - HLQStrLength);
