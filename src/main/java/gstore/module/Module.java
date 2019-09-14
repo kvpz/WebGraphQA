@@ -1,4 +1,4 @@
-package gstore;
+package gstore.module;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -12,6 +12,8 @@ public class Module implements Comparator<Module>, Comparable<Module> {
     private List<String> imageUrls;
     private String text;
     private String dataTitle;
+    private String dataName;
+    private String dataTrackingModuleName;
     private Element element;
     private boolean hasVideo;
     private boolean hasCarousel; // or slideshow
@@ -32,8 +34,13 @@ public class Module implements Comparator<Module>, Comparable<Module> {
 
         text = this.element.text();
 
-        dataTitle = this.element.child(0).attr("data-name");
+        dataName = this.element.child(0).attr("data-name");
 
+        if(this.element.childNodes().size() > 2) {
+            dataTitle = this.element.child(2).attr("data-title");
+
+            dataTrackingModuleName = this.element.child(2).attr("data-tracking-module-name");
+        }
         if(this.element.getElementsByTag("video").size() > 0) {
             hasVideo = true;
         }
@@ -70,6 +77,10 @@ public class Module implements Comparator<Module>, Comparable<Module> {
                 // extract the url from the attribute
                 int urlStartIndex = styleVal.indexOf("http");
                 int urlEndIndex = styleVal.substring(urlStartIndex).indexOf(")");
+
+                if(urlStartIndex > urlEndIndex)
+                    urlEndIndex += urlStartIndex;
+
                 url = styleVal.substring(urlStartIndex, urlEndIndex);
                 if(url.endsWith("\""))
                     url = url.substring(0, url.length() - 1);
@@ -80,6 +91,7 @@ public class Module implements Comparator<Module>, Comparable<Module> {
                 if(indexOfBackslash < 0) {
                     // There is no http or protocol relative url, thus there is an error
                     System.out.println("ERROR (" + indexOfBackslash + "): style background image: " + styleVal);
+                    System.out.println("See " + parentPageUrl + "\n");
                     url = new String();
                 }
                 else {
@@ -113,6 +125,14 @@ public class Module implements Comparator<Module>, Comparable<Module> {
 
     public String getDataTitle() {
         return dataTitle;
+    }
+
+    public String getDataName() {
+        return dataName;
+    }
+
+    public String getDataTrackingModuleName(){
+        return dataTrackingModuleName;
     }
 
     public void setId(String id) {
