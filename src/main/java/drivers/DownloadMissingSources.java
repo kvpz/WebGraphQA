@@ -15,11 +15,13 @@ import java.io.File;
 public class DownloadMissingSources {
 
     public static void main(String[] args) {
-        // iterate through all page directories across all regions
+        // iterate through all region directories
         for(File region : WebGraphFile.GetAllRegionDirs()) {
+            // iterate through all page directories in the region
             for(File pageDir : WebGraphFile.GetAllDirsFromRegion(region.getName())) {
-                // less than one because MAC DS_Store
-                if(pageDir.listFiles().length < 1) {
+                // determine if directory is missing source.html
+                File[] files = pageDir.listFiles();
+                if(files.length < 1) {
                     DownloadPages.downloadPage(MyUtil.CreateURLFromWebpageDirName(pageDir.getName()),
                             pageDir.getParentFile());
                 }
